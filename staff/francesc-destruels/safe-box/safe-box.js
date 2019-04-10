@@ -7,24 +7,29 @@
  * @param {bolean} bolean 
  */
 
-var safeBox = function(pass, depend, bolean){
-    var password = "123", secret, infotoshow;
-    
-    var safeBox = (function(){
-    if (pass != password) throw TypeError(pass+ ' is not the pasword');
-    if (bolean != true && bolean != undefined) throw TypeError(bolean+ ' is not correct input');
 
-    if (arguments === 1){
-         return secret;
-        infotoshow = secret;
-    } else if (arguments === 2){
-        secret[0] = depend;
-        infotoshow = "secret has change";
-    } else if (arguments === 3)
-        secret = depend;
-        password = depend;
-        infotoshow = "pass has change"; 
-    });
+var safeBox = (function() {
+    var __password = '123';
+    var __secret;
+    var __message;
 
-    safeBox();
-}
+    function safeBox(password, secretOrNewPassword, changePassword) {
+        if (password === __password) {
+            if (arguments.length === 1) {
+                __message = __secret;
+                return __message;
+
+            } else if (arguments.length === 2) {
+                __secret = secretOrNewPassword;
+                return __message = "secret saved";
+
+            } else if (arguments.length === 3 && changePassword) {
+                __password = secretOrNewPassword;
+                return __message = "pass has change";   
+                
+            }
+        } else throw Error('wrong password');
+    }
+
+    return safeBox;
+})();

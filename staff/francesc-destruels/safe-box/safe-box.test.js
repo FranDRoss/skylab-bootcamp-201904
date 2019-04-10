@@ -6,7 +6,7 @@ describe('safe-box', function () {
         
         var result = safeBox("123", "I do not like you");
 
-        expect(result, "secret has change");
+        expect(result, "secret saved");
     });
 
     it('Should retrieve the secret', function () {
