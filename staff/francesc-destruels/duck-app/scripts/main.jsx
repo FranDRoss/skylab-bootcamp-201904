@@ -21,24 +21,27 @@ function Login(props) {
 
 //IRA AL COMPONENTE HOME
 function Home(props) {
+    function handleSubmit(event) {
+        event.preventDefault()
+    }
+
     return <main>
         <h1>Hello, {props.name}!</h1>
+        <form onSubmit={handleSubmit}>
+            <input type="text" name="search" placeholder="Search"></input>
+            <button>search</button>
+        </form>
     </main>
 }
 
 
-//MAIN WEB
+//IRA A APP TAMBIEN 
 class App extends Component {
     state = { loggedIn: false, loginError: null, userName: null }
 
     handleLogin = (username, password) => {
         const loggedIn = logic.loginUser(username, password)
-
-        // if (!loggedIn)
-        //     this.setState({ loginError: 'wrong credentials' })
-        // else 
-        //     this.setState({ loggedIn })
-
+        
         this.setState(loggedIn ? { loggedIn, userName: logic.retrieveUser().name } : { loginError: 'wrong credentials' })
     }
 
