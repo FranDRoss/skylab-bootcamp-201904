@@ -8,41 +8,6 @@ const i18n = {
         ga: 'Administrador'
     },
 
-    register: {
-        en: {
-            title: 'Sign up',
-            name: 'Name',
-            surname: 'Surname',
-            email: 'E-mail',
-            password: 'Password',
-            confirmpassword: 'Confirm Password',
-        },
-        es: {
-            title: 'Registro',
-            name: 'Nombre',
-            surname: 'Apellido',
-            email: 'E-milio',
-            password: 'Contraseña',
-            confirmpassword: 'Confirmar Contraseña'
-        },
-        ca: {
-            title: 'Registre',
-            name: 'Nom',
-            surname: 'Cognom',
-            email: 'E-mil·li',
-            password: 'Contrasenya',
-            confirmpassword: 'Confirma Contrasenya'
-        },
-        ga: {
-            title: 'Rexistro',
-            name: 'Nome',
-            surname: 'Apelido',
-            email: 'E-miliño',
-            password: 'Contrasinal',
-            confirmpassword: 'Confirma Contrasinal',
-        },
-    },
-
     errors: {
         en: {
             1: 'Wrong credentials',

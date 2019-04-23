@@ -22,7 +22,7 @@ const i18nLogin = {
         email: 'E-miliño',
         password: 'Contrasinal'
     }
-},
+}
 
 function Login(props) {
     const { lang } = props
