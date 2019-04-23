@@ -35,6 +35,12 @@ class App extends Component {
         this.setState({ visible: 'login'})
     })
 
+    handleCheckOut = () => {
+        logic.logoutUser()
+
+        this.setState({visible: logic.isUserLoggedIn ? 'home' : 'landing'})
+    }
+
     render() {
         const {
             state: { lang, visible, loginError, registerError, name },
@@ -42,7 +48,8 @@ class App extends Component {
             handleRegisterNavigation,
             handleLoginNavigation,
             handleLogin,
-            handleRegister
+            handleRegister,
+            handleCheckOut
         } = this
 
         return <>
@@ -54,7 +61,7 @@ class App extends Component {
 
             {visible === 'register' && <Register lang={lang} onRegister={handleRegister} error={registerError} />}
 
-            {visible === 'home' && <Home lang={lang} name={name} />}
+            {visible === 'home' && <Home lang={lang} name={name} onCheckOut = {handleCheckOut} />}
         </>
     }
 }
