@@ -1,6 +1,6 @@
 
 
-const i18nLogin = {
+const literals = {
     en: {
         title: 'Sign In',
         email: 'E-mail',
@@ -24,10 +24,9 @@ const i18nLogin = {
     }
 }
 
-function Login(props) {
-    const { lang } = props
+function Login({lang, error}) {
 
-    const literals = i18nLogin[lang]
+    const {title, email, password} = literals[lang]
 
     function handleSubmit(event) {
         event.preventDefault()
@@ -39,12 +38,12 @@ function Login(props) {
     }
 
     return <>
-    <h2>{literals.title}</h2>
+    <h2>{title}</h2>
     <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder={literals.email} />
-        <input type="password" name="password" placeholder={literals.password} />
+        <input type="text" name="username" placeholder={email} />
+        <input type="password" name="password" placeholder={password} />
         <button>Login</button>
-        <p>{props.error}</p>
+        <p>{error}</p>
     </form>
     </>
 }

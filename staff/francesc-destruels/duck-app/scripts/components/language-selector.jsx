@@ -1,24 +1,8 @@
 
-// class LanguageSelector extends Component {
-//     constructor(select, callback) {
-//         super(select)
 
-//         this.onChange = callback
-//     }
+function LanguageSelector({lang, onLanguageChange}) {
 
-//     set onChange(callback) {
-//         this.container.addEventListener('change', event => {
-//             callback(event.target.value)
-//         })
-//     }
-// }
-
-
-
-function LanguageSelector(props) {
-
-
-    return <select onChange={event => props.onLanguageChange(event.target.value)}>
+    return <select value={lang} onChange={event => onLanguageChange(event.target.value)}>
         <option value="en">English</option>
         <option value="es">Español</option>
         <option value="ca">Català</option>

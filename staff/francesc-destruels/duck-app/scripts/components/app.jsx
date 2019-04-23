@@ -1,9 +1,9 @@
 const { Component } = React
 
 class App extends Component {
-    state = { lang: 'en', visible: logic.isUserLoggedIn ? 'home' : 'landing', loginError: null, registerError: null, name: null }
+    state = { lang: i18n.language, visible: logic.isUserLoggedIn ? 'home' : 'landing', error: null, name: null }
 
-    handleLanguageChange = lang => this.setState({ lang })
+    handleLanguageChange = lang => this.setState({ lang: i18n.language = lang })
 
     handleLoginNavigation = () => this.setState({ visible: 'login' })
 
@@ -16,34 +16,36 @@ class App extends Component {
             logic.retrieveUser((error, user) => {
                 if (error) return this.setState({ error: error.message })
 
-                this.setState({ visible: 'home', name: user.name })
+                this.setState({ visible: 'home', name: user.name, error: null })
             })
         })
 
     componentDidMount() {
         logic.isUserLoggedIn && logic.retrieveUser((error, user) => {
-            if (error) return this.setState({ loginError: error.message })
+            if (error) return this.setState({ error: error.message })
 
-            this.setState({ name: user.name.toUpperCase() })
+            this.setState({ name: user.name })
         })
     }
 
-    handleRegister= (name, surname, email, password) =>
-    logic.registerUser(name, surname, email, password, error => {
-        if (error) return this.setState({ registerError: error.message })
+    handleRegister = (name, surname, email, password) => {
 
-        this.setState({ visible: 'login'})
-    })
+        logic.registerUser(name, surname, email, password, error => {
+            if (error) return this.setState({ error: error.message })
+
+            this.setState({ visible: 'login', error: null })
+        })
+    }
 
     handleCheckOut = () => {
         logic.logoutUser()
 
-        this.setState({visible: logic.isUserLoggedIn ? 'home' : 'landing'})
+        this.setState({ visible: 'landing' })
     }
 
     render() {
         const {
-            state: { lang, visible, loginError, registerError, name },
+            state: { lang, visible, error, name },
             handleLanguageChange,
             handleRegisterNavigation,
             handleLoginNavigation,
@@ -53,15 +55,15 @@ class App extends Component {
         } = this
 
         return <>
-            <LanguageSelector onLanguageChange={handleLanguageChange} />
+            <LanguageSelector lang={lang} onLanguageChange={handleLanguageChange} />
 
             {visible === 'landing' && <Landing lang={lang} onRegister={handleRegisterNavigation} onLogin={handleLoginNavigation} />}
 
-            {visible === 'login' && <Login lang={lang} onLogin={handleLogin} error={loginError} />}
+            {visible === 'login' && <Login lang={lang} onLogin={handleLogin} error={error} />}
 
-            {visible === 'register' && <Register lang={lang} onRegister={handleRegister} error={registerError} />}
+            {visible === 'register' && <Register lang={lang} onRegister={handleRegister} error={error} />}
 
-            {visible === 'home' && <Home lang={lang} name={name} onCheckOut = {handleCheckOut} />}
+            {visible === 'home' && <Home lang={lang} name={name} onCheckOut={handleCheckOut} />}
         </>
     }
 }

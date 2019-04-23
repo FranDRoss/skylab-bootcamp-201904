@@ -7,6 +7,7 @@ const i18nRegister = {
         email: 'E-mail',
         password: 'Password',
         confirmpassword: 'Confirm Password',
+        confirmRegister: 'Confirm Register',
     },
     es: {
         title: 'Registro',
@@ -14,7 +15,8 @@ const i18nRegister = {
         surname: 'Apellido',
         email: 'E-milio',
         password: 'Contraseña',
-        confirmpassword: 'Confirmar Contraseña'
+        confirmpassword: 'Confirmar Contraseña',
+        confirmRegister: 'Confirma Registro',
     },
     ca: {
         title: 'Registre',
@@ -22,7 +24,8 @@ const i18nRegister = {
         surname: 'Cognom',
         email: 'E-mil·li',
         password: 'Contrasenya',
-        confirmpassword: 'Confirma Contrasenya'
+        confirmpassword: 'Confirma Contrasenya',
+        confirmRegister: 'Confirm Registre',
     },
     ga: {
         title: 'Rexistro',
@@ -31,6 +34,7 @@ const i18nRegister = {
         email: 'E-miliño',
         password: 'Contrasinal',
         confirmpassword: 'Confirma Contrasinal',
+        confirmRegister: 'Confirma Passwordo',
     }
 }
 
@@ -42,10 +46,11 @@ function Register(props) {
     function handleSubmit(event) {
         event.preventDefault()
 
-        const name = event.target.name.value
-        const surname = event.target.surname.value
-        const email = event.target.email.value
-        const password = event.target.password.value
+        const x = event.target
+        const name = x.name.value
+        const surname = x.surname.value
+        const email = x.email.value
+        const password = x.password.value
 
         props.onRegister(name, surname, email, password)
     }
@@ -57,7 +62,7 @@ function Register(props) {
         <input type="text" name="surname" placeholder={literals.surname} />
         <input type="text" name="email" placeholder={literals.email} />
         <input type="password" name="password" placeholder={literals.password} />
-        <button>Register</button>
+        <button>{literals.confirmRegister}</button>
         <p>{props.error}</p>
     </form>
     </>
