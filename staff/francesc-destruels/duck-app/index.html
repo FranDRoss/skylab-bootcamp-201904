@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Duckastic!</title>
+    <title>Document</title>
 </head>
 
 <body>
@@ -15,13 +15,23 @@
     <script src="vendor/react/16.8.6/react-dom.development.js"></script>
     <script src="vendor/babel/7.4.3/babel.js"></script>
 
-    <script src="scripts/validate.js"></script>
+    <!-- common -->
     <script src="scripts/errors.js"></script>
-    <script src="scripts/normalize.js"></script>
+    <script src="scripts/validate/index.js"></script>
+    <script src="scripts/normalize/index.js"></script>
 
-    <script src="./scripts/user-api/index.js"></script>
-    <script src="./scripts/duck-api/index.js"></script>
-    <script src="scripts/logic.js"></script>
+    <!-- business logic and data services -->
+    <script src="scripts/duck-api/index.js"></script>
+    <script src="scripts/user-api/index.js"></script>
+    <script src="scripts/logic/index.js"></script>
+    <script src="scripts/i18n.js"></script>
+
+    <!-- presentation -->
+    <script type="text/babel" src="scripts/components/app.jsx"></script>
+    <script type="text/babel" src="scripts/components/language-selector.jsx"></script>
+    <script type="text/babel" src="scripts/components/landing.jsx"></script>
+    <script type="text/babel" src="scripts/components/login.jsx"></script>
+    <script type="text/babel" src="scripts/components/home.jsx"></script>
     <script type="text/babel" src="scripts/main.jsx"></script>
 </body>
 

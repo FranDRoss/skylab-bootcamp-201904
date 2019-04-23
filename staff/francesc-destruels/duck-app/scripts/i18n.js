@@ -1,50 +1,6 @@
 const i18n = {
 
-    landing: {
-        en: {
-            register: 'Register',
-            or: 'or',
-            login: 'LogIn',
-        },
-        es: {
-            register: 'Regístrate',
-            or: 'o',
-            login: 'Conectate',
-        },
-        ca: {
-            register: "Regitra't",
-            or: 'o',
-            login: "Conecta't",
-        },
-        ga: {
-            register: 'Rexistrese',
-            or: 'o',
-            login: 'LogIn',
-        },
-    },
-    login: {
-        en: {
-            title: 'Sign In',
-            email: 'E-mail',
-            password: 'Password',
-        },
-        es: {
-            title: 'Inicia Sesión',
-            email: 'E-milio',
-            password: 'Contraseña'
-
-        },
-        ca: {
-            title: 'Inici de Sessió',
-            email: 'E-mil·li',
-            password: 'Contrasenya'
-        },
-        ga: {
-            title: 'Inicio de sesion',
-            email: 'E-miliño',
-            password: 'Contrasinal'
-        }
-    },
+    
     admin: {
         en: 'Administrator',
         es: 'Administrador',
