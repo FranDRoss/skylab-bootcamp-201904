@@ -1,7 +1,7 @@
 const { Component } = React
 
 class App extends Component {
-    state = { lang: i18n.language, visible: logic.isUserLoggedIn ? 'home' : 'landing', error: null, name: null }
+    state = { lang: i18n.language, visible: logic.isUserLoggedIn ? 'home' : 'landing', error: null, name: null, results: null }
 
     handleLanguageChange = lang => this.setState({ lang: i18n.language = lang })
 
@@ -9,16 +9,21 @@ class App extends Component {
 
     handleRegisterNavigation = () => this.setState({ visible: 'register' })
 
-    handleLogin = (username, password) =>
-        logic.loginUser(username, password, error => {
-            if (error) return this.setState({ error: error.message })
-
-            logic.retrieveUser((error, user) => {
+    handleLogin = (username, password) => {
+        try {
+            logic.loginUser(username, password, error => {
                 if (error) return this.setState({ error: error.message })
 
-                this.setState({ visible: 'home', name: user.name, error: null })
+                logic.retrieveUser((error, user) => {
+                    if (error) return this.setState({ error: error.message })
+
+                    this.setState({ visible: 'home', name: user.name, error: null })
+                })
             })
-        })
+        } catch ({ message }) {
+            this.setState({ error: message })
+        }
+    }
 
     componentDidMount() {
         logic.isUserLoggedIn && logic.retrieveUser((error, user) => {
@@ -28,30 +33,40 @@ class App extends Component {
         })
     }
 
-    handleRegister = (name, surname, email, password) => {
+    handleRegister = (name, surname, username, password) => {
+        try {
+            logic.registerUser(name, surname, username, password, error => {
+                if (error) return this.setState({ error: error.message })
 
-        logic.registerUser(name, surname, email, password, error => {
-            if (error) return this.setState({ error: error.message })
-
-            this.setState({ visible: 'login', error: null })
-        })
+                this.setState({ visible: 'register-ok', error: null })
+            })
+        } catch ({ message }) {
+            this.setState({ error: message })
+        }
     }
 
     handleCheckOut = () => {
         logic.logoutUser()
 
-        this.setState({ visible: 'landing' })
+        this.setState({ visible: 'landing', results: null })
+    }
+
+    handleSearch = (query) => {
+        logic.searchDucks(query, (ducks) => {
+            if (ducks) return this.setState({ results: ducks })
+        })
     }
 
     render() {
         const {
-            state: { lang, visible, error, name },
+            state: { lang, visible, error, name, results },
             handleLanguageChange,
             handleRegisterNavigation,
             handleLoginNavigation,
             handleLogin,
             handleRegister,
-            handleCheckOut
+            handleCheckOut,
+            handleSearch
         } = this
 
         return <>
@@ -63,8 +78,10 @@ class App extends Component {
 
             {visible === 'register' && <Register lang={lang} onRegister={handleRegister} error={error} />}
 
-            {visible === 'home' && <Home lang={lang} name={name} onCheckOut={handleCheckOut} />}
+            {visible === 'home' && <><Home lang={lang} name={name} onCheckOut={handleCheckOut}></Home> <Search lang={lang} onSearch={handleSearch}/></>}
+
+            {visible === 'home' && results && results.map(duck => <Results imageUrl={duck.imageUrl} title={duck.title} price={duck.price}/>)}
         </>
+
     }
 }
-

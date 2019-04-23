@@ -1,5 +1,4 @@
 const Landing = (() => {
-
     const literals = {
         en: {
             register: 'Register',
