@@ -1,39 +1,5 @@
 const { Component } = React
 
-//IRA AL COMPONENTE LOGIN
-function Login(props) {
-    function handleSubmit(event) {
-        event.preventDefault()
-
-        const username = event.target.username.value
-        const password = event.target.password.value
-
-        props.onLogin(username, password)
-    }
-
-    return <form onSubmit={handleSubmit}>
-        <input type="text" name="username" placeholder="username" />
-        <input type="password" name="password" placeholder="password" />
-        <button>Login</button>
-        <span>{props.error}</span>
-    </form>
-}
-
-//IRA AL COMPONENTE HOME
-function Home(props) {
-    function handleSubmit(event) {
-        event.preventDefault()
-    }
-
-    return <main>
-        <h1>Hello, {props.name}!</h1>
-        <form onSubmit={handleSubmit}>
-            <input type="text" name="search" placeholder="Search"></input>
-            <button>search</button>
-        </form>
-    </main>
-}
-
 
 //IRA A APP TAMBIEN 
 class App extends Component {

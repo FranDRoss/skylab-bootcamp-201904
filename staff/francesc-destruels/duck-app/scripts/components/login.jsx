@@ -1,6 +1,4 @@
 
-const { Component } = React
-
 function Login(props) {
     function handleSubmit(event) {
         event.preventDefault()
