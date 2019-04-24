@@ -12,13 +12,12 @@ const userApi = {
             { name: 'password', value: password, type: 'string', notEmpty: true }
         ])
 
-        return call(`${this.__url__}/user`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        return fetch(`${this.__url__}/user`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, surname, username, password }),
-            timeout: this.__timeout__
         })
-            .then(response => JSON.parse(response))
+            .then(response => response.json())
     },
 
     authenticate(username, password) {
@@ -27,13 +26,13 @@ const userApi = {
             { name: 'password', value: password, type: 'string', notEmpty: true }
         ])
 
-        return call(`${this.__url__}/auth`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        return fetch(`${this.__url__}/auth`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ username, password }),
-            timeout: this.__timeout__
         })
-            .then(response => JSON.parse(response))
+            .then(response => response.json())
+
     },
 
     retrieve(id, token) {
@@ -42,10 +41,9 @@ const userApi = {
             { name: 'token', value: token, type: 'string', notEmpty: true }
         ])
 
-        return call(`${this.__url__}/user/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: this.__timeout__
+        return fetch(`${this.__url__}/user/${id}`, {
+            headers: { Authorization: `Bearer ${token}`  },
         })
-            .then(response => JSON.parse(response))
+            .then(response => response.json())
     }
 }

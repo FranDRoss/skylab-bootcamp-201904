@@ -12,35 +12,40 @@ class App extends Component {
     handleLogin = (username, password) => {
         try {
             logic.loginUser(username, password)
-            .then(() =>{
-                logic.retrieveUser()
-            })
-            .then(() => {
-                logic.retrieveUser(user) => {
+                .then(() =>
+                    logic.retrieveUser()
+                )
+                .then(user => {
                     this.setState({ visible: 'home', name: user.name, error: null })
                 })
-            })
+                .catch(error =>
+                    this.setState({ error: error.message })
+                )
         } catch ({ message }) {
             this.setState({ error: message })
         }
     }
 
     componentDidMount() {
-        logic.isUserLoggedIn && logic.retrieveUser((error, user) => {
-            if (error) return this.setState({ error: error.message })
-
-            this.setState({ name: user.name })
-        })
+        logic.isUserLoggedIn &&
+            logic.retrieveUser()
+                .then(user =>
+                    this.setState({ name: user.name })
+                )
+                .catch(error =>
+                    this.setState({ error: error.message })
+                )
     }
 
     handleRegister = (name, surname, username, password) => {
         try {
             logic.registerUser(name, surname, username, password)
-                .then(() => {
-                    this.setState({error: null, visible: 'login'})
-                })
-
-                .catch(this.setState({ error: error.message }))
+                .then(() =>
+                    this.setState({ visible: 'login', error: null })
+                )
+                .catch(error =>
+                    this.setState({ error: error.message })
+                )
         } catch ({ message }) {
             this.setState({ error: message })
         }
@@ -49,24 +54,26 @@ class App extends Component {
     handleCheckOut = () => {
         logic.logoutUser()
 
-        this.setState({ visible: 'landing', results: null })
+        this.setState({ visible: 'landing', results: null, detail: null, error: null  })
     }
 
-    handleSearch = (query) => {
-        logic.searchDucks(query, (error, ducks) => {
-            if (error) return this.setState({ error: ducks.error, results: null })
+    handleSearch = query =>
+        logic.searchDucks(query)
+            .then(ducks =>
+                this.setState({ error: null, detail: null, error: null, results: ducks })
+            )
+            .catch(error =>
+                this.setState({ error: error.message })
+            )
 
-            this.setState({ error: null, detail: null, error: null, results: ducks })
-        })
-    }
-
-    handleDetail = (id) => {
-        logic.retrieveDuck(id, (error, duck) => {
-            if (error) return this.setState({ error: error.message })
-
-            this.setState({ results: null, error: null, detail: duck })
-        })
-    }
+    handleDetail = id =>
+        logic.retrieveDuck(id)
+            .then(duck =>
+                this.setState({ results: null, error: null, detail: duck, results: null })
+            )
+            .catch(error =>
+                this.setState({ error: error.message })
+            )
 
     render() {
         const {

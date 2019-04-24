@@ -25,7 +25,6 @@ const Login = (() => {
     }
 
     return function ({ lang, error, onLogin }) {
-        console.log(error)
         const { title, email, password } = literals[lang]
 
         function handleSubmit(event) {

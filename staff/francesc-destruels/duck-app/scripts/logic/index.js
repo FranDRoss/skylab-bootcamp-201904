@@ -21,7 +21,7 @@ const logic = {
         return !!(this.__userId__ && this.__userToken__)
     },
 
-    registerUser(name, surname, email, password, callback) {
+    registerUser(name, surname, email, password) {
         validate.arguments([
             { name: 'name', value: name, type: 'string', notEmpty: true },
             { name: 'surname', value: surname, type: 'string', notEmpty: true },
@@ -39,7 +39,7 @@ const logic = {
 
     },
 
-    loginUser(email, password, callback) {
+    loginUser(email, password) {
         validate.arguments([
             { name: 'email', value: email, type: 'string', notEmpty: true },
             { name: 'password', value: password, type: 'string', notEmpty: true },
@@ -54,8 +54,7 @@ const logic = {
 
                     this.__userId__ = id
                     this.__userToken__ = token
-                } 
-                throw new LogicError(response.error)
+                } else throw new LogicError(response.error)
             })
     },
 
@@ -66,9 +65,7 @@ const logic = {
                     const { data: { name, surname, username: email } } = response
 
                     return { name, surname, email }
-                } 
-                
-                throw new LogicError(response.error)
+                } else throw new LogicError(response.error)
             })
     },
 
@@ -76,26 +73,19 @@ const logic = {
         sessionStorage.clear()
     },
 
-    searchDucks(query, callback) {
+    searchDucks(query) {
         validate.arguments([
             { name: 'query', value: query, type: 'string' },
-            { name: 'callback', value: callback, type: 'function' }
         ])
 
-        duckApi.searchDucks(query)
-            .then(ducks => callback(undefined, ducks))
-            .catch(callback)
+        return duckApi.searchDucks(query)
     },
 
-    retrieveDuck(id, callback) {
+    retrieveDuck(id) {
         validate.arguments([
             { name: 'id', value: id, type: 'string' },
-            { name: 'callback', value: callback, type: 'function' }
         ])
 
-        duckApi.retrieveDuck(id)
-            .then(duck => callback(undefined, duck))
-            .catch(callback)
-
+       return duckApi.retrieveDuck(id)
     }
 }
