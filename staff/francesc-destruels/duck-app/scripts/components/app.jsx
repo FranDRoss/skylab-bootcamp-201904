@@ -1,7 +1,7 @@
 const { Component } = React
 
 class App extends Component {
-    state = { lang: i18n.language, visible: logic.isUserLoggedIn ? 'home' : 'landing', error: null, name: null, results: null }
+    state = { lang: i18n.language, visible: logic.isUserLoggedIn ? 'home' : 'landing', error: null, name: null, results: null, detail: null }
 
     handleLanguageChange = lang => this.setState({ lang: i18n.language = lang })
 
@@ -53,20 +53,29 @@ class App extends Component {
 
     handleSearch = (query) => {
         logic.searchDucks(query, (ducks) => {
-            if (ducks) return this.setState({ results: ducks })
+            if (ducks.error) return this.setState({error: ducks.error, results: null})
+            
+            this.setState({detail: null, results: ducks, error: null })
+        })
+    }
+
+    handleDetail = (id) => {
+        logic.retrieveDuck(id, (duck) => {
+            if (duck) return this.setState({ results: null, detail: duck, error: null })
         })
     }
 
     render() {
         const {
-            state: { lang, visible, error, name, results },
+            state: { lang, visible, error, name, results, detail },
             handleLanguageChange,
             handleRegisterNavigation,
             handleLoginNavigation,
             handleLogin,
             handleRegister,
             handleCheckOut,
-            handleSearch
+            handleSearch,
+            handleDetail,
         } = this
 
         return <>
@@ -78,9 +87,11 @@ class App extends Component {
 
             {visible === 'register' && <Register lang={lang} onRegister={handleRegister} error={error} />}
 
-            {visible === 'home' && <><Home lang={lang} name={name} onCheckOut={handleCheckOut}></Home> <Search lang={lang} onSearch={handleSearch}/></>}
+            {visible === 'home' && <><Home lang={lang} name={name} onCheckOut={handleCheckOut}></Home> <Search lang={lang} onSearch={handleSearch}  error={error}/></>}
 
-            {visible === 'home' && results && results.map(duck => <Results imageUrl={duck.imageUrl} title={duck.title} price={duck.price}/>)}
+            {visible === 'home' && results && results.map(duck => <Items key={duck.id} onDetail={handleDetail} id={duck.id} imageUrl={duck.imageUrl} title={duck.title} price={duck.price}/>)}
+
+            {visible === 'home' && detail && <Detail lang={lang} id={detail.id} imageUrl={detail.imageUrl} description={detail.description} title={detail.title} price={detail.price}/>}
         </>
 
     }

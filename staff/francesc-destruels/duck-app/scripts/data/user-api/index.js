@@ -80,5 +80,15 @@ const userApi = {
         ])
 
         this.__call__(`/user/${id}`, 'GET', undefined, token, callback)
-    }
+    },
+
+    // update(id, token, callback) {
+    //     validate.arguments([
+    //         { name: 'id', value: id, type: 'string', notEmpty: true },
+    //         { name: 'token', value: token, type: 'string', notEmpty: true },
+    //         { value: callback, type: 'function' }
+    //     ])
+
+    //     this.__call__(`/user/${id}`, 'GET', undefined, token, callback)
+    // }
 }

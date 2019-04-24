@@ -21,7 +21,7 @@ const Search = (() => {
     }
 
     return function (props) {
-        const { lang } = props
+        const { lang, error } = props
 
         const { search, confirmSearch } = literals[lang]
 
@@ -34,11 +34,11 @@ const Search = (() => {
         }
 
         return <>
-            {<form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit}>
                 <input type="text" name="query" placeholder={search} />
                 <button>{confirmSearch}</button>
-                <p>{props.error}</p>
-            </form>}
+                <p>{error}</p>
+            </form>
         </>
     }
 })()
