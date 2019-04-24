@@ -11,12 +11,12 @@ class App extends Component {
 
     handleLogin = (username, password) => {
         try {
-            logic.loginUser(username, password, error => {
-                if (error) return this.setState({ error: error.message })
-
-                logic.retrieveUser((error, user) => {
-                    if (error) return this.setState({ error: error.message })
-
+            logic.loginUser(username, password)
+            .then(() =>{
+                logic.retrieveUser()
+            })
+            .then(() => {
+                logic.retrieveUser(user) => {
                     this.setState({ visible: 'home', name: user.name, error: null })
                 })
             })
@@ -35,11 +35,12 @@ class App extends Component {
 
     handleRegister = (name, surname, username, password) => {
         try {
-            logic.registerUser(name, surname, username, password, error => {
-                if (error) return this.setState({ error: error.message })
+            logic.registerUser(name, surname, username, password)
+                .then(() => {
+                    this.setState({error: null, visible: 'login'})
+                })
 
-                this.setState({ visible: 'register-ok', error: null })
-            })
+                .catch(this.setState({ error: error.message }))
         } catch ({ message }) {
             this.setState({ error: message })
         }
@@ -52,16 +53,18 @@ class App extends Component {
     }
 
     handleSearch = (query) => {
-        logic.searchDucks(query, (ducks) => {
-            if (ducks.error) return this.setState({error: ducks.error, results: null})
-            
-            this.setState({detail: null, results: ducks, error: null })
+        logic.searchDucks(query, (error, ducks) => {
+            if (error) return this.setState({ error: ducks.error, results: null })
+
+            this.setState({ error: null, detail: null, error: null, results: ducks })
         })
     }
 
     handleDetail = (id) => {
-        logic.retrieveDuck(id, (duck) => {
-            if (duck) return this.setState({ results: null, detail: duck, error: null })
+        logic.retrieveDuck(id, (error, duck) => {
+            if (error) return this.setState({ error: error.message })
+
+            this.setState({ results: null, error: null, detail: duck })
         })
     }
 
@@ -87,11 +90,11 @@ class App extends Component {
 
             {visible === 'register' && <Register lang={lang} onRegister={handleRegister} error={error} />}
 
-            {visible === 'home' && <><Home lang={lang} name={name} onCheckOut={handleCheckOut}></Home> <Search lang={lang} onSearch={handleSearch}  error={error}/></>}
+            {visible === 'home' && <><Home lang={lang} name={name} onCheckOut={handleCheckOut}></Home> <Search lang={lang} onSearch={handleSearch} error={error} /></>}
 
-            {visible === 'home' && results && results.map(duck => <Items key={duck.id} onDetail={handleDetail} id={duck.id} imageUrl={duck.imageUrl} title={duck.title} price={duck.price}/>)}
+            {visible === 'home' && results && results.map(duck => <Items key={duck.id} onDetail={handleDetail} items={duck} />)}
 
-            {visible === 'home' && detail && <Detail lang={lang} id={detail.id} imageUrl={detail.imageUrl} description={detail.description} title={detail.title} price={detail.price}/>}
+            {visible === 'home' && detail && <Detail lang={lang} item={detail} />}
         </>
 
     }

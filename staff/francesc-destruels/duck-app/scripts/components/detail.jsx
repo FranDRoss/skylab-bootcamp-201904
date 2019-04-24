@@ -16,8 +16,8 @@ const Detail = (() => {
         }
     }
 
-    return function (props) {
-        const {title, imageUrl, price, description, id, lang} = props
+    return function ({item, lang}) {
+        const {title, imageUrl: image, price, description, id} = item
 
         const { buy } = literals[lang]
 
@@ -31,7 +31,7 @@ const Detail = (() => {
 
         return <div>
             <h2>{title}</h2>
-            <img src={imageUrl} alt="Ducktail" />
+            <img src={image} alt="Ducktail" />
             <span>{price}</span>
             <p>{description}</p>
             <button onClick={handleBuy}>{buy}</button>

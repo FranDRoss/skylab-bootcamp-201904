@@ -1,15 +1,15 @@
 
 const Items = (() => {
-    return function (props) {
-        const {title, imageUrl, price, id} = props
+    return function ({items, onDetail}) {
+        const {title, imageUrl: image, price, id} = items
 
         function handleClick(){
-            props.onDetail(id)
+            onDetail(id)
         }
 
         return <div onClick={handleClick}>
             <h2 >{title}</h2>
-            <img src={imageUrl} alt="Ducktail" />
+            <img src={image} alt="Ducktail" />
             <span>{price}</span>
         </div>
     }
