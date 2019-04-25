@@ -1,14 +1,16 @@
-'use strict'
+import logic from '.'
+import { LogicError, RequirementError, ValueError, FormatError } from '../common/errors'
+import userApi from '../data/user-api'
 
 describe('logic', () => {
     describe('users', () => {
-        const name = 'Manuel'
-        const surname = 'Barzi'
+        const name = 'Feanc'
+        const surname = 'Basdarzi'
         let email
         const password = '123'
 
         beforeEach(() => {
-            email = `manuelbarzi-${Math.random()}@gmail.com`
+            email = `manasduelasdbarzi-${Math.random()}@gmail.com`
 
             logic.__userId__ = null
             logic.__userToken__ = null
@@ -120,7 +122,7 @@ describe('logic', () => {
             let id
 
             beforeEach(() =>
-                userApi.create(name, surname, email, password)
+                userApi.create(email, password, { name, surname })
                     .then(response => id = response.data.id)
             )
 
@@ -162,7 +164,7 @@ describe('logic', () => {
             let id, token
 
             beforeEach(() =>
-                userApi.create(name, surname, email, password)
+                userApi.create(email, password, { name, surname })
                     .then(response => {
                         id = response.data.id
 
@@ -200,24 +202,55 @@ describe('logic', () => {
                     })
             })
         })
-    })
 
-    describe('ducks', () => {
-        describe('search ducks', () => {
-            it('should succeed on correct query', () =>
-                logic.searchDucks('yellow')
-                    .then(ducks => {
-                        expect(ducks).toBeDefined()
-                        expect(ducks instanceof Array).toBeTruthy()
-                        expect(ducks.length).toBe(13)
+        describe('ducks', () => {
+            describe('search ducks', () => {
+                it('should succeed on correct query', () =>
+                    logic.searchDucks('yellow')
+                        .then(ducks => {
+                            expect(ducks).toBeDefined()
+                            expect(ducks instanceof Array).toBeTruthy()
+                            expect(ducks.length).toBe(13)
+                        })
+
+                    // TODO other cases
+                )
+            })
+        })
+
+        describe('toggleFavDuck', () => {
+            let userid, token, user, duckid = '123'
+
+            beforeEach(() =>
+                userApi.create(email, password, { name, surname })
+                    .then(response => {
+                        userid = response.data.id
+
+                        return userApi.authenticate(email, password)
                     })
+                    .then(response => {
+                        token = response.data.token
 
-                // TODO other cases
+                        logic.__userId__ = userid
+                        logic.__userToken__ = token
+                    })
+            )
+
+            it('should succeed on save correct id favourite duck', () =>
+                logic.toggleFavDucks(duckid)
+                    .then(response => {
+                        expect(response).toBeDefined()
+                        expect(response.status).toBe('OK')
+                    })
+                    .then(() => userApi.retrieve(userid, token))
+                    .then(response => {
+                        const { status, data } = response
+
+                        expect(status).toBe('OK')
+                        expect(data).toBeDefined()
+                        expect(data.favourites[0]).toBe(duckid)
+                    })
             )
         })
-    })
-
-    describe('favourites', () =>{
-        describe()
     })
 })

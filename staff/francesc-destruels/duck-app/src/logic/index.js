@@ -36,7 +36,7 @@ const logic = {
 
         validate.email(email)
 
-        return userApi.create(name, surname, email, password)
+        return userApi.create(email, password, { name, surname })
             .then(response => {
                 if (response.status === 'OK') return
 
@@ -99,45 +99,41 @@ const logic = {
         return duckApi.retrieveDuck(id)
     },
 
+
     listFavDucks() {
         return userApi.retrieveFavourites(this.__userId__, this.__userToken__)
             .then(response => {
                 if (response.status === 'OK') {
                     const { data: { favourites } } = response
-
+    
                     return { favourites }
                 } else throw new LogicError(response.error)
             })
     },
-
+    
     toggleFavDucks(id) {
         validate.arguments([
             { name: 'id', value: id, type: 'string' },
         ])
-
+    
         return userApi.retrieve(this.__userId__, this.__userToken__)
             .then(response => {
                 if (response.status === 'OK') {
                     const { data } = response
-
-                    if (data.favourites) return data
-                    else return []
-
-
+    
+                    const favs = data.favourites ? data.favourites : []
+    
+                    const x = favs.indexOf(id)
+    
+                    if (x > -1) {
+                        favs.splice(x, 1)
+                    } else favs.push(id)
+        
+                    return userApi.update(this.__userId__, this.__userToken__, { "favourites": favs })
+    
                 } else throw new LogicError(response.error)
             })
-            .then(favs => {
-
-                let x = favs.indexOf(id)
-
-                if (x > -1) {
-                    favs.splice(x, 1)
-                } else favs.push(id)
-
-                return userApi.update(this.__userId__, this.__userToken__, { "favourites": favs })
-            })
     }
-
 }
 
 export default logic
