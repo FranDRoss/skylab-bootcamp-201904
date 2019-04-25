@@ -8,8 +8,7 @@ const duckApi = {
             { name: 'query', value: query, type: 'string' }
         ])
         
-        return fetch(`${this.__url__}/search?q=${query}`, {
-        })
+        return fetch(`${this.__url__}/search?q=${query}`)
             .then(response =>  response.json())
     },
 
@@ -18,8 +17,7 @@ const duckApi = {
             { name: 'id', value: id, type: 'string' }
         ])
 
-        return fetch(`${this.__url__}/ducks/${id}`, {
-        })
+        return fetch(`${this.__url__}/ducks/${id}`)
             .then(response =>  response.json())
     }
 }
