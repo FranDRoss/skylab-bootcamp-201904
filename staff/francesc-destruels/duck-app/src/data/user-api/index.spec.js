@@ -276,7 +276,6 @@ describe('user api', () => {
 
                     expect(status).toBe('OK')
                     expect(name).toBeDefined()
-
                     expect(name).toBe(rename)
                 })
         })

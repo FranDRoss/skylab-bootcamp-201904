@@ -53,13 +53,16 @@ const userApi = {
     update(id, token, toUpdate) {
         validate.arguments([
             { name: 'id', value: id, type: 'string', notEmpty: true },
-            { name: 'token', value: token, type: 'string', notEmpty: true }
+            { name: 'token', value: token, type: 'string', notEmpty: true },
+            { name: 'toUpdate', value: toUpdate, type: 'object', notEmpty: true }
         ])
 
         return call(`${this.__url__}/user/${id}`, {
+            method: "PUT",
             headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
             timeout: this.__timeout__,
             body: JSON.stringify(toUpdate),
+            timeout: this.__timeout__
         })
             .then(response => response.json())
     }
