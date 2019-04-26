@@ -114,8 +114,6 @@ describe('logic', () => {
 
                 expect(() => logic.registerUser(name, surname, nonEmail, password)).toThrowError(FormatError, `${nonEmail} is not an e-mail`)
             })
-
-            // TODO password fail cases
         })
 
         describe('login', () => {
@@ -212,14 +210,12 @@ describe('logic', () => {
                             expect(ducks instanceof Array).toBeTruthy()
                             expect(ducks.length).toBe(13)
                         })
-
-                    // TODO other cases
                 )
             })
         })
 
         describe('toggleFavDuck', () => {
-            let userid, token, user, duckid = '123'
+            let userid, token, duckid = '123', duckid2 = '345'
 
             beforeEach(() =>
                 userApi.create(email, password, { name, surname })
@@ -236,11 +232,11 @@ describe('logic', () => {
                     })
             )
 
-            it('should succeed on save correct id favourite duck', () =>
-                logic.toggleFavDucks(duckid)
+            
+            it('should succeed on save another id', () =>
+                logic.toggleFavDucks(duckid2)
                     .then(response => {
-                        expect(response).toBeDefined()
-                        expect(response.status).toBe('OK')
+                        expect(response).toBeUndefined()
                     })
                     .then(() => userApi.retrieve(userid, token))
                     .then(response => {
@@ -248,9 +244,54 @@ describe('logic', () => {
 
                         expect(status).toBe('OK')
                         expect(data).toBeDefined()
-                        expect(data.favourites[0]).toBe(duckid)
+                        expect(data.favourites[0]).toBe(duckid2)
+                    })
+                    .then(() => logic.toggleFavDucks(duckid))
+                    .then(response => {
+                        expect(response).toBeUndefined()
+                    })
+                    .then(() => userApi.retrieve(userid, token))
+                    .then(response => {
+                        const { status, data } = response
+
+                        expect(status).toBe('OK')
+                        expect(data).toBeDefined()
+                        expect(data.favourites[1]).toBeDefined
                     })
             )
+
+            it('should succeed on save erasing and id', () =>
+                logic.toggleFavDucks(duckid2)
+                    .then(response => {
+                        expect(response).toBeUndefined()
+                    })
+                    .then(() => userApi.retrieve(userid, token))
+                    .then(response => {
+                        const { status, data } = response
+
+                        expect(status).toBe('OK')
+                        expect(data).toBeDefined()
+                        expect(data.favourites[0]).toBe(duckid2)
+                    })
+                    .then(() => logic.toggleFavDucks(duckid2))
+                    .then(response => {
+                        expect(response).toBeUndefined()
+                    })
+                    .then(() => userApi.retrieve(userid, token))
+                    .then(response => {
+                        const { status, data } = response
+
+                        expect(status).toBe('OK')
+                        expect(data).toBeDefined()
+                        expect(data.favourites[0]).toBeUndefined
+                    })
+            )
+
+            it('should fail on id not being a string', () => {
+
+                expect(() => logic.toggleFavDucks({}).toThrowError(TypeError))
+
+            })
         })
     })
 })

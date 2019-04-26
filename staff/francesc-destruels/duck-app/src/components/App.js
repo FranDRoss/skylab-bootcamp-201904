@@ -8,6 +8,11 @@ import RegisterOk from './RegisterOk'
 import Login from './Login'
 import Home from './Home'
 
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faHeart } from '@fortawesome/free-solid-svg-icons'
+
+library.add(faHeart)
+
 class App extends Component {
     state = { lang: i18n.language, visible: logic.isUserLoggedIn ? 'home' : 'landing', error: null, name: null }
 

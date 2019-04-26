@@ -101,7 +101,7 @@ const logic = {
 
 
     listFavDucks() {
-        return userApi.retrieveFavourites(this.__userId__, this.__userToken__)
+        return userApi.retrieve(this.__userId__, this.__userToken__)
             .then(response => {
                 if (response.status === 'OK') {
                     const { data: { favourites } } = response
@@ -121,7 +121,7 @@ const logic = {
                 if (response.status === 'OK') {
                     const { data } = response
     
-                    const favs = data.favourites ? data.favourites : []
+                    const { favs = [] } = data
     
                     const x = favs.indexOf(id)
     
@@ -130,7 +130,7 @@ const logic = {
                     } else favs.push(id)
         
                     return userApi.update(this.__userId__, this.__userToken__, { "favourites": favs })
-    
+                    .then(()=> { })
                 } else throw new LogicError(response.error)
             })
     }
