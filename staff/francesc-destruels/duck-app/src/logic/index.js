@@ -100,38 +100,48 @@ const logic = {
     },
 
 
-    listFavDucks() {
+
+    toggleFavDuck(id) {
+        validate.arguments([
+            { name: 'id', value: id, type: 'string' }
+        ])
+
         return userApi.retrieve(this.__userId__, this.__userToken__)
             .then(response => {
-                if (response.status === 'OK') {
-                    const { data: { favourites } } = response
-    
-                    return { favourites }
-                } else throw new LogicError(response.error)
+                const { status, data } = response
+
+                if (status === 'OK') {
+                    const { favs = [] } = data // NOTE if data.favs === undefined then favs = []
+
+                    const index = favs.indexOf(id)
+
+                    if (index < 0) favs.push(id)
+                    else favs.splice(index, 1)
+
+                    return userApi.update(this.__userId__, this.__userToken__, { favs })
+                        .then(() => { })
+                }
+
+                throw new LogicError(response.error)
             })
     },
-    
-    toggleFavDucks(id) {
-        validate.arguments([
-            { name: 'id', value: id, type: 'string' },
-        ])
-    
+
+    retrieveFavDucks() {
         return userApi.retrieve(this.__userId__, this.__userToken__)
             .then(response => {
-                if (response.status === 'OK') {
-                    const { data } = response
-    
+                const { status, data } = response
+
+                if (status === 'OK') {
                     const { favs = [] } = data
-    
-                    const x = favs.indexOf(id)
-    
-                    if (x > -1) {
-                        favs.splice(x, 1)
-                    } else favs.push(id)
-        
-                    return userApi.update(this.__userId__, this.__userToken__, { "favourites": favs })
-                    .then(()=> { })
-                } else throw new LogicError(response.error)
+
+                    if (favs.length) {
+                        const calls = favs.map(fav => duckApi.retrieveDuck(fav))
+
+                        return Promise.all(calls)
+                    } else return favs
+                }
+
+                throw new LogicError(response.error)
             })
     }
 }
