@@ -1,0 +1,15 @@
+* {
+    border: 1px solid black;
+    border-radius: 1em;
+    padding: 1em;
+}
+
+form {
+    display: flex;
+    justify-content: center;
+    align-content: center
+}
+
+button {
+    background-color: rgb(197, 197, 245)
+}
