@@ -1,86 +1,65 @@
 const express = require('express')
-const bodyParser = require('./body-parser')
+const { bodyParser, cookieParser, injectLogic, checkLogin } = require('./middlewares')
 const render = require('./render')
-const logic = require('./logic')
+const package = require('./package.json')
+const { Login, Register, Home } = require('./components')
 
-const { argv: [, , port] } = process
+const { argv: [, , port = 8080] } = process
 
 const app = express()
 
 app.use(express.static('public'))
 
-let checked = false
-let nametoshow = ""
+app.use(cookieParser, injectLogic)
 
-app.get('/', (req, res) => {
-
-    if (checked) res.redirect('/home')
-    else res.send(render(`<div>
-            <a href="/login">Login</a>
-            <a href="/register">Register</a>
-        </div>`))
+app.get('/', checkLogin('/home'), (req, res) => {
+    res.send(render(`<h1>Welcome to this Web Application</h1>
+<a href="/register">Register</a> or <a href="/login">Login</a>`))
 })
 
-app.get('/register', (req, res) => {
-
-    if (checked) res.redirect('/home')
-    else res.send(render(`<form method="post" action="/register">
-            <input type="text" name="name" placeholder="Name" required>
-            <input type="text" name="surname" placeholder="Surname" required>
-            <input type="text" name="username" placeholder="Email" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button>Register</button>
-        </form>`))
+app.get('/register', checkLogin('/home'), (req, res) => {
+    res.send(render(new Register().render()))
 })
 
+app.post('/register', [checkLogin('/home'), bodyParser], (req, res) => {
+    const { body: { name, surname, email, password }, logic } = req
 
-app.post('/register', bodyParser, (req, res) => {
-    const { name, surname, username, password } = req.body
-
-    logic.registerUser(name, surname, username, password)
-        .then(() => res.send(render(`<p>Ok, user correctly registered, you can now proceed to <a href="/login">login</a></p>`)))
-        .catch(error => error && res.send(render(`<form method="post" action="/register">
-        <input type="text" name="name" placeholder="Name" required>
-        <input type="text" name="surname" placeholder="Surname" required>
-        <input type="text" name="username" placeholder="Email" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button>Register</button>
-        <p>Something happened try again</p>
-    </form>`)))
-
+    try {
+        logic.registerUser(name, surname, email, password)
+            .then(() => res.send(render(`<p>Ok, user correctly registered, you can now proceed to <a href="/login">login</a></p>`)))
+            .catch(({ message }) => {
+                res.send(render(new Register().render({ name, surname, email, message })))
+            })
+    } catch ({ message }) {
+        res.send(render(new Register().render({ name, surname, email, message })))
+    }
 })
 
-app.get('/login', (req, res) => {
-    if (checked) res.redirect('/home')
-    else res.send(render(`<h1>Login</h1>
-    <form method="post" action="/login">
-            <input type="text" placeholder="Name" name="username">
-            <input type="password" placeholder="Password" name="password">
-            <button>Login</button>
-        </form>`))
+app.get('/login', checkLogin('/home'), (req, res) =>
+    res.send(render(new Login().render()))
+)
+
+app.post('/login', [checkLogin('/home'), bodyParser], (req, res) => {
+    const { body: { email, password }, logic } = req
+
+    try {
+        logic.loginUser(email, password)
+            .then(() => {
+                res.setHeader('set-cookie', [`token=${logic.__userToken__}`])
+                res.redirect('/home')
+            })
+            .catch(({ message }) => res.send(render(new Login().render({ email, message }))))
+    } catch ({ message }) {
+        res.send(render(new Login().render({ email, message })))
+    }
 })
 
-app.post('/login', bodyParser, (req, res) => {
-    const { username, password } = req.body
+app.get('/home', checkLogin('/', false), (req, res) => {
+    const { logic } = req
 
-    logic.loginUser(username, password)
-        .then(() => {
-            nametoshow = username
-            checked = true
-            res.redirect('/home')
-        })
-        .catch(error => error && res.send(`<h1>Login</h1>
-                                            <form method="post" action="/login">
-                                            <input type="text" placeholder="Name" name="username">
-                                            <input type="password" placeholder="Password" name="password">
-                                            <button>Login</button>
-                                            <p>Wrong credentials.</p>
-                                        </form>`))
+    logic.retrieveUser()
+        .then(({ name }) => res.send(render(new Home().render({ name }))))
+        .catch(({ message }) => res.send(render(`<p>${message}</p>`)))
 })
 
-app.get('/home', (req, res) => {
-    if (checked) res.send(render(`<h1>Hola, ${nametoshow}!`))
-    else res.redirect('/')
-})
-
-app.listen(port)
+app.listen(port, () => console.log(`${package.name} ${package.version} up on port ${port}`))
