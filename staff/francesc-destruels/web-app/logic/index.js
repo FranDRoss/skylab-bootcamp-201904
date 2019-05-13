@@ -62,9 +62,9 @@ class Logic {
         return userApi.retrieve(this.__userId__, this.__userToken__)
             .then(response => {
                 if (response.status === 'OK') {
-                    const { data: { name, surname, username: email } } = response
+                    const { data: { name, surname, username: email, cart = [], favs = [] } } = response
 
-                    return { name, surname, email }
+                    return { name, surname, email, cart, favs }
                 } else throw new LogicError(response.error)
             })
     }
@@ -120,6 +120,31 @@ class Logic {
             })
     }
 
+    toggleCartDuck(id) {
+        validate.arguments([
+            { name: 'id', value: id, type: 'string' }
+        ])
+
+        return userApi.retrieve(this.__userId__, this.__userToken__)
+            .then(response => {
+                const { status, data } = response
+
+                if (status === 'OK') {
+                    const { cart = [] } = data // NOTE if data.cart === undefined then cart = []
+
+                    const index = cart.indexOf(id)
+
+                    if (index < 0) cart.push(id)
+                    else cart.splice(index, 1)
+
+                    return userApi.update(this.__userId__, this.__userToken__, { cart })
+                        .then(() => { })
+                }
+
+                throw new LogicError(response.error)
+            })
+    }
+
     retrieveFavDucks() {
         return userApi.retrieve(this.__userId__, this.__userToken__)
             .then(response => {
@@ -133,6 +158,25 @@ class Logic {
 
                         return Promise.all(calls)
                     } else return favs
+                }
+
+                throw new LogicError(response.error)
+            })
+    }
+
+    retrieveCartDucks() {
+        return userApi.retrieve(this.__userId__, this.__userToken__)
+            .then(response => {
+                const { status, data } = response
+
+                if (status === 'OK') {
+                    const { cart:cartDucks = [] } = data
+
+                    if (cartDucks.length) {
+                        const calls = cartDucks.map(cart => duckApi.retrieveDuck(cart))
+
+                        return Promise.all(calls)
+                    } else return cartDucks
                 }
 
                 throw new LogicError(response.error)

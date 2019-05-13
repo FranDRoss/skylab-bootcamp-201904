@@ -1,0 +1,15 @@
+mixin favourites(favs, cart)
+    ul(style="list-style-type: none;") 
+        for fav in favs 
+            li
+                a(href=fav.url)
+                    img(src=fav.image, alt="duck")
+                    h3 #{fav.title}
+                    span #{fav.price}
+                a(href=`/toggleFavourite/${fav.id}:favourites`)
+                    button Erase
+                a(href=`/toggleCart/${fav.id}:favourites`)
+                    button #{cart.indexOf(fav.id) > -1 ? "Already in the Cart" : "Buy it!"}
+        else 
+            li 
+                p   You do not have any favourites! What are you waiting for?

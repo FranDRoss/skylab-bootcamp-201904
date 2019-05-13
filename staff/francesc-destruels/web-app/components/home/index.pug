@@ -2,13 +2,27 @@ extends ../index
 include ../search/index
 include ../results/index 
 include ../detail/index
+include ../feedback/index
+include ../favourites/index
+include ../cart/index
 
 block content
-    h1 Hola, name!
-    form(action='/logout' method='post')
-        button Logout
+    h1 Hola, #{name}!
+    div
+        form(action='/logout' method='post')
+            button.form__button Logout
+        form(action='/home/favourites')
+            button.form__button Favourites
+        form(action='/home/cart')
+            button.form__button Cart
     +search
-    if results
-        +results(results)
-    if detail
-        +detail(detail)
+    if ducks
+        +results(ducks, favs, cart, query )
+    if duck
+        +detail(duck, favs, cart)
+    if message
+        +feedback(message)
+    if toPaintFavs 
+        +favourites(toPaintFavs, cart)
+    if toPaintCart
+        +cart(toPaintCart)

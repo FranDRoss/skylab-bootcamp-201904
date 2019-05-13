@@ -1,0 +1,13 @@
+mixin cart(products)
+    ul(style="list-style-type: none;") 
+        for product in products 
+            li
+                a(href=product.url)
+                    img(src=product.image, alt="duck")
+                    h3 #{product.title}
+                    span #{product.price}
+            a(href=`/toggleCart/${product.id}:cart`)
+                button Cancel Product
+        else 
+            li 
+                p   You do not have any product in the Cart

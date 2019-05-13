@@ -1,2 +1,17 @@
-mixin results(items)
-    ul items
+mixin results(items, favs, cart, query)
+
+    ul(style="list-style-type: none;") 
+        for item in items 
+            li
+                a(href=item.url)
+                    img(src=item.image, alt="duck")
+                    h3 #{item.title}
+                    span #{item.price}
+                a(href=`/toggleFavourite/${item.id}:search:${query}`)
+                    button #{favs.indexOf(item.id) > -1 ? "Favourite!" : "Make it favourite!"}
+
+                a(href=`/toggleCart/${item.id}:search:${query}`)
+                    button #{cart.indexOf(item.id) > -1 ? "Already in the Cart: Cancel?" : "Buy it!"}
+        else 
+            li 
+                p There are no results for your search!

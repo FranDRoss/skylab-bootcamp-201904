@@ -1,6 +1,11 @@
-mixin detail({title, image, description, price})
+mixin detail({title, image, description, price, id}, favs, cart)
 
-    h2 title
+    h2 #{title}
     img(src= image )
-    p description
-    span price
+    p #{description}
+    span #{price}
+    a(href=`/toggleFavourite/${id}:detail`)
+        button #{favs.indexOf(id) > -1 ? "Favourite!" : "Make it favourite!"}
+    a(href=`/toggleCart/${id}:detail`)
+        button #{cart.indexOf(id) > -1 ? "Already in the Cart: Cancel?" : "Buy it!"}
+

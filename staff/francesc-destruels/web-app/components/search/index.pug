@@ -1,4 +1,4 @@
 mixin search()
-  form(action='/home/search')
-    input(type='text' name='query' value='${query}')
-    button Search
+  form(action='/home/search').form
+    input(type='text' name='query' value=query)
+    button.form__button Search
