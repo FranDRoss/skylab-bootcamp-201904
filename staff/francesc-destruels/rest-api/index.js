@@ -14,7 +14,7 @@ app.post('/user', jsonParser, (req, res) => { // ruta simple user para registra,
     
     try {
         logic.registerUser(name, surname, email, password)
-            .then(() => res.json({ token }))
+            .then(() => res.status(201).json({ message: 'Ok, user registered. ' }))
             .catch(({ message }) => {
                 res.status(400).json({ error: message})
             })
