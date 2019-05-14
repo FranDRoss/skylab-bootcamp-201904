@@ -36,39 +36,11 @@ class LogicError extends Error {
     }
 }
 
-class HttpError extends Error {
-    constructor(message) {
-        super(message)
-    }
-}
-
-class UnknownError extends Error {
-    constructor(message) {
-        super(message)
-    }
-}
-
-class UnexpectedError extends Error {
-    constructor(message) {
-        super(message)
-    }
-}
-
-class UnhandledError extends Error {
-    constructor(message) {
-        super(message)
-    }
-}
-
 module.exports = {
     ValueError,
     FormatError,
     RequirementError,
     ConnectionError,
     TimeoutError,
-    LogicError,
-    HttpError,
-    UnknownError,
-    UnexpectedError,
-    UnhandledError
+    LogicError
 }
