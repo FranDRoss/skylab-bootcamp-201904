@@ -2,12 +2,15 @@ const express = require('express')
 const package = require('./package.json')
 const bodyParser = require('body-parser')
 const logic = require('./logic')
+const cors = require('cors')
 
 const jsonParser = bodyParser.json()
 
 const { argv: [, , port = 8080] } = process
 
 const app = express()
+
+app.use(cors())
 
 app.post('/user', jsonParser, (req, res) => { // ruta simple user para registra, devuelve un Ok.
     const { body: { name, surname, email, password } } = req
@@ -112,7 +115,7 @@ app.post('/user/favs/:id', jsonParser, (req, res) => {
 })
 
 app.get('/user/favs', jsonParser, (req, res) => { 
-    let { headers: { authorization: token }, params: { id }} = req
+    let { headers: { authorization: token } } = req
     token = token.split(' ')[1]
     
     try {

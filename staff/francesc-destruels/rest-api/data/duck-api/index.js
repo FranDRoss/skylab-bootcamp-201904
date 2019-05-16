@@ -17,7 +17,7 @@ const duckApi = {
         validate.arguments([
             { name: 'id', value: id, type: 'string' }
         ])
-
+        
         return call(`${this.__url__}/ducks/${id}`)
             .then(response => response.json())
     }
