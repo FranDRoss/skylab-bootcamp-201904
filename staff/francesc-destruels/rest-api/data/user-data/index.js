@@ -6,6 +6,16 @@ const validate = require('../../common/validate')
 const userData = {
     __file__: path.join(__dirname, 'users.json'),
 
+    __load__() {
+        return fs.readFile(this.__file__, 'utf8')
+            .then(JSON.parse)
+    },
+
+    __save__(users) {
+        return fs.writeFile(this.__file__, JSON.stringify(users))
+    },
+
+
     create(user) {
         validate.arguments([
             { name: 'user', value: user, type: 'object', optional: false }
@@ -13,21 +23,16 @@ const userData = {
 
         user.id = uuid()
 
-        return fs.readFile(this.__file__, 'utf8')
-            .then(content => {
-                const users = JSON.parse(content)
-
+        return this.__load__()
+            .then(users => {
                 users.push(user)
-
-                const json = JSON.stringify(users)
-
-                return fs.writeFile(this.__file__, json)
+                
+                return this.__save__(users)
             })
     },
 
     list() {
-        return fs.readFile(this.__file__, 'utf8')
-            .then(JSON.parse)
+        return this.__load__()
     },
 
     retrieve(id) {
@@ -35,12 +40,10 @@ const userData = {
             { name: 'id', value: id, type: 'string', optional: false }
         ])
 
-        return fs.readFile(this.__file__, 'utf8')
-            .then(content => {
-                const users = JSON.parse(content)
-
+        return this.__load__()
+            .then(users => {
                 const user = users.find(user => user.id === id)
-                
+
                 return user
             })
     },
@@ -51,9 +54,8 @@ const userData = {
             { name: 'data', value: data, type: 'object', optional: false }
         ])
 
-        return fs.readFile(this.__file__, 'utf8')
-            .then(content => {
-                const users = JSON.parse(content)
+        return this.__load__()
+            .then(users => {
 
                 const updatedList = users.map(user => {
 
@@ -79,9 +81,7 @@ const userData = {
                     return user
                 })
 
-                const json = JSON.stringify(updatedList)
-
-                return fs.writeFile(this.__file__, json)
+                this.__save__(updatedList)
             })
 
     },
@@ -91,38 +91,23 @@ const userData = {
             { name: 'id', value: _id, type: 'string', optional: false }
         ])
 
-        return fs.readFile(this.__file__, 'utf8')
-            .then(content => {
-                const users = JSON.parse(content)
-
+        return this.__load__()
+            .then(users => {
                 const index = users.findIndex(user => user.id === _id)
 
                 if (index < 0) throw new Error(`User doesn't exist`)
 
-                const json = JSON.stringify(users.splice(index))
-
-                return fs.writeFile(this.__file__, json)
+                this.__save__(users)
             })
     },
 
-    find(data) {
+    find(criteria) {
         validate.arguments([
-            { name: 'data', value: data, type: 'object', optional: false }
+            { name: 'criteria', value: criteria, type: 'function', notEmpty: true, optional: false }
         ])
 
-        return fs.readFile(this.__file__, 'utf8')
-            .then(content => {
-                const users = JSON.parse(content)
-
-                const matchingList = users.filter(user => {
-                    const dataKey = Object.keys(data)
-                    if (user[dataKey[0]] === data[dataKey[0]]) return user
-                    }
-                )
-
-                if (matchingList) return matchingList
-
-            })
+        return this.__load__()
+            .then(users => users.filter(criteria))
     },
 }
 

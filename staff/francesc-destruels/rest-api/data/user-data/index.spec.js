@@ -4,7 +4,7 @@ const path = require('path')
 
 userData.__file__ = path.join(__dirname, 'users.test.json')
 
-describe('user data', () => {
+fdescribe('user data', () => {
     const users = [
         {
             id: "123",
@@ -127,13 +127,24 @@ describe('user data', () => {
 
     describe('find', () => {
         beforeEach(() => fs.writeFile(userData.__file__, JSON.stringify(users)))
+       
+        const criteria = (({ name }) => (name.includes('P')))
+        const criteria2 = (({ email, password }) => (email === "pepitopalotes@mail.com" && password === "123"))
 
         it('should succeed on matching existing users', () => {
-            return userData.find({ name: 'Pepito' })
-                .then(_users => {
-                    expect(_users).toBeDefined
-                    expect(_users[0].name).toEqual(_users[1].name)
-                })
+            return userData.find(criteria)
+            .then(_users => {
+                expect(_users).toBeDefined
+                expect(_users[0].name).toEqual(_users[1].name)
+            })
+        })
+        
+        it('should succeed on matching existing user', () => {
+            return userData.find(criteria2)
+            .then( _users => {
+                expect(_users).toBeDefined
+                expect(_users[0].id).toEqual(users[2].id)
+            })
         })
 
     })
