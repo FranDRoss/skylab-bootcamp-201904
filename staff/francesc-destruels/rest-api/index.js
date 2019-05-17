@@ -3,6 +3,7 @@ const package = require('./package.json')
 const bodyParser = require('body-parser')
 const logic = require('./logic')
 const cors = require('cors')
+const _token = require('../common/token')
 
 const jsonParser = bodyParser.json()
 
@@ -44,8 +45,10 @@ app.get('/user', jsonParser, (req, res) => { // Un get + ruta user y ID para obt
     let { headers: { authorization: token } } = req
     token = token.split(' ')[1]
     
+    const { id } = _token.payload(token)
+
     try {
-        logic.retrieveUser(token) // cojerá token
+        logic.retrieveUser(id) // cojerá token
             .then(({ name, surname, email }) => res.json({ name, surname, email }))
             .catch(({ message }) => {
                 res.status(400).json({ error: message})
@@ -72,9 +75,10 @@ app.get('/user', jsonParser, (req, res) => { // Un get + ruta user y ID para obt
 app.get('/duckSearch', jsonParser, (req, res) => { // Un get + ruta search
     let { headers: { authorization: token }, query: { q:query } } = req
     token = token.split(' ')[1]
+    const { id } = _token.payload(token)
     
     try {
-        logic.searchDucks(token, query) // cojerá token
+        logic.searchDucks(id, query) // cojerá token
             .then((ducks) => res.json({ ducks }))
             .catch(({ message }) => {
                 res.status(400).json({ error: message})
@@ -87,9 +91,10 @@ app.get('/duckSearch', jsonParser, (req, res) => { // Un get + ruta search
 app.get('/duckDetail/:id', jsonParser, (req, res) => { // Un get + ruta search
     let { headers: { authorization: token }, params: { id }} = req
     token = token.split(' ')[1]
+    const { _id } = _token.payload(token)
     
     try {
-        logic.retrieveDuck(token, id) // cojerá token
+        logic.retrieveDuck(_id, id) // cojerá token
             .then(duck => res.json({ duck }))
             .catch(({ message }) => {
                 res.status(400).json({ error: message})
@@ -102,9 +107,10 @@ app.get('/duckDetail/:id', jsonParser, (req, res) => { // Un get + ruta search
 app.post('/user/favs/:id', jsonParser, (req, res) => { 
     let { headers: { authorization: token }, params: { id }} = req
     token = token.split(' ')[1]
+    const { _id } = _token.payload(token)
     
     try {
-        logic.toggleFavDuck(token, id)
+        logic.toggleFavDuck(_id, id)
             .then(() => res.json({ message: 'Done'}))
             .catch(({ message }) => {
                 res.status(400).json({ error: message})
@@ -117,9 +123,10 @@ app.post('/user/favs/:id', jsonParser, (req, res) => {
 app.get('/user/favs', jsonParser, (req, res) => { 
     let { headers: { authorization: token } } = req
     token = token.split(' ')[1]
+    const { id } = _token.payload(token)
     
     try {
-        logic.retrieveFavDucks(token)
+        logic.retrieveFavDucks(id)
             .then(ducks => res.json({ ducks }))
             .catch(({ message }) => {
                 res.status(400).json({ error: message})

@@ -1,5 +1,5 @@
 const validate = require('../common/validate')
-const userApi = require('../data/user-api')
+const userData = require('../data/user-data')
 const duckApi = require('../data/duck-api')
 const { LogicError } = require('../common/errors')
 const _token = require('../common/token')
@@ -15,7 +15,7 @@ const logic = {
 
         validate.email(email)
 
-        return userApi.create(email, password, { name, surname })
+        return userData.create(email, password, { name, surname })
             .then(response => {
                 if (response.status === 'OK') return
 
@@ -31,7 +31,7 @@ const logic = {
 
         validate.email(email)
 
-        return userApi.authenticate(email, password)
+        return userData.find(email, password)
             .then(response => {
                 if (response.status === 'OK') {
                     const { data: { token } } = response
@@ -48,7 +48,7 @@ const logic = {
 
         const { id } = _token.payload(token)
 
-        return userApi.retrieve(id, token)
+        return userData.retrieve(id, token)
             .then(response => {
                 if (response.status === 'OK') {
                     const { data: { name, surname, username: email } } = response
@@ -66,7 +66,7 @@ const logic = {
 
         const { id } = _token.payload(token)
 
-        return userApi.retrieve(id, token)
+        return userData.retrieve(id, token)
             .then(response => {
                 if (response.status === 'OK') {
                     return duckApi.searchDucks(query)
@@ -83,7 +83,7 @@ const logic = {
 
         const { id: _id } = _token.payload(token)
 
-        return userApi.retrieve(_id, token)
+        return userData.retrieve(_id, token)
             .then(response => {
                 if (response.status === 'OK') {
                     return duckApi.retrieveDuck(id)
@@ -99,7 +99,7 @@ const logic = {
 
         const { id: _id } = _token.payload(token)
 
-        return userApi.retrieve(_id, token)
+        return userData.retrieve(_id, token)
             .then(response => {
                 const { status, data } = response
 
@@ -111,7 +111,7 @@ const logic = {
                     if (index < 0) favs.push(id)
                     else favs.splice(index, 1)
 
-                    return userApi.update(_id, token, { favs })
+                    return userData.update(_id, token, { favs })
                         .then(() => { })
                 }
 
@@ -126,7 +126,7 @@ const logic = {
 
         const { id: _id } = _token.payload(token)
 
-        return userApi.retrieve(_id, token)
+        return userData.retrieve(_id, token)
             .then(response => {
                 const { status, data } = response
 
