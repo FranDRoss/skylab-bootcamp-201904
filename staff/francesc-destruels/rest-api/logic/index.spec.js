@@ -2,7 +2,10 @@ const logic = require('.')
 const { LogicError, RequirementError, ValueError, FormatError } = require('../common/errors')
 const userData = require('../data/user-data')
 const duckApi = require('../data/duck-api')
-const atob = require('atob')
+const fs = require('fs').promises
+const path = require('path')
+
+userData.__file__ = path.join(__dirname, '../data/user-data/users.test.json')
 
 describe('logic', () => {
     const name = 'Manuel'
@@ -113,7 +116,6 @@ describe('logic', () => {
                 expect(() => logic.registerUser(name, surname, nonEmail, password)).toThrowError(FormatError, `${nonEmail} is not an e-mail`)
             })
 
-            // TODO password fail cases
         })
 
         describe('authenticate user', () => {
@@ -262,6 +264,136 @@ describe('logic', () => {
                     })
             )
         })
+
+        describe('add car', () => {
+            let id, product = [45654, 5], product2 = [454545, 5]
+
+            beforeEach(() => userData.create({ name, surname, email, password })
+                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
+                .then(response => id = response[0].id)
+            )
+
+            it('should succeed adding a new product to an empty cart', () => {
+                return logic.addCart(id, product)
+                    .then(response => expect(response).toBeUndefined())
+                    .then(() => userData.retrieve(id))
+                    .then(response => {
+                        const { cart } = response
+
+                        expect(cart).toBeDefined()
+                        expect(cart instanceof Array).toBeTruthy()
+                        expect(cart.length).toBe(1)
+                        expect(cart[0][0]).toBe(product[0])
+                    })
+            })
+
+            it('should succeed adding a new product to the cart', () => {
+                return logic.addCart(id, product)
+                    .then(() => logic.addCart(id, product2))
+                    .then(response => expect(response).toBeUndefined())
+                    .then(() => userData.retrieve(id))
+                    .then(response => {
+                        const { cart } = response
+
+                        expect(cart).toBeDefined()
+                        expect(cart instanceof Array).toBeTruthy()
+                        expect(cart.length).toBe(2)
+                        expect(cart[0][0]).toBe(product[0])
+                        expect(cart[0][1]).toBe(product[1])
+                    })
+            })
+
+            it('should succeed in incresing the amount of an already added product', () => {
+                return logic.addCart(id, product)
+                    .then(() => logic.addCart(id, product))
+                    .then(response => expect(response).toBeUndefined())
+                    .then(() => userData.retrieve(id))
+                    .then(response => {
+                        const { cart } = response
+
+                        expect(cart).toBeDefined()
+                        expect(cart instanceof Array).toBeTruthy()
+                        expect(cart.length).toBe(1)
+                        expect(cart[0][0]).toBe(product[0])
+                        expect(cart[0][1]).toBe(product[1] * 2)
+                    })
+            })
+        })
+
+        describe('retrive cart', () => {
+            let id, product = ["5c3853aebd1bde8520e66e11", 5], product2 = ["5c3853aebd1bde8520e66e15", 5]
+
+            beforeEach(() => userData.create({ name, surname, email, password })
+                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
+                .then(response => id = response[0].id)
+            )
+
+            it('should succeed on retriving the cart', () => {
+                return userData.update(id, { cart: [product, product2] })
+                    .then(() => logic.retrieveCart(id))
+                    .then(cart => {
+
+                        expect(cart).toBeDefined()
+                        expect(cart instanceof Array).toBeTruthy()
+                        expect(cart.length).toBe(2)
+                        expect(cart[0].howMany).toBe(product[1])
+                        expect(cart[1].howMany).toBe(product2[1])
+                    })
+            })
+        })
+
+        describe('checkout', () => {
+            let id, product = ["5c3853aebd1bde8520e66e11", 5], product2 = ["5c3853aebd1bde8520e66e15", 5]
+
+            beforeEach(() => userData.create({ name, surname, email, password })
+                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
+                .then(response => id = response[0].id)
+            )
+
+            it('should succeed on adding the cart to the checkoutlist with a timestamp as an Id', () => {
+                return userData.update(id, { cart: [product, product2] })
+                    .then(() => logic.checkout(id))
+                    .then(response => {
+                        expect(response).toBeUndefined()
+                        return userData.retrieve(id)
+                    })
+                    .then(user => {
+
+                        console.log(user)
+
+                        expect(user).toBeDefined()
+
+                        expect(user.checkout).toBeTruthy()
+                        expect(user.checkout.length).toBe(1)
+                        expect(user.checkout[0].id).toBeTruthy()
+                        expect(user.checkout[0].productList).toBeTruthy()
+                        expect(user.checkout[0].productList[0][0]).toBe(product[0])
+                    })
+            })
+
+            it('should succeed on retriving the checkout', () => {
+                return userData.update(id, { cart: [product, product2] })
+                    .then(() => logic.checkout(id))
+                    .then(response => {
+                        expect(response).toBeUndefined()
+                        return userData.retrieve(id)
+                    })
+                    .then(user => {
+
+                        console.log(user)
+
+                        expect(user).toBeDefined()
+
+                        expect(user.checkout).toBeTruthy()
+                        expect(user.checkout.length).toBe(1)
+                        expect(user.checkout[0].id).toBeTruthy()
+                        expect(user.checkout[0].productList).toBeTruthy()
+                        expect(user.checkout[0].productList[0][0]).toBe(product[0])
+                    })
+            })
+
+        })
+
     })
 
     describe('ducks', () => {
@@ -287,4 +419,6 @@ describe('logic', () => {
             )
         })
     })
+
+    afterAll(() => fs.writeFile(userData.__file__, '[]'))
 })

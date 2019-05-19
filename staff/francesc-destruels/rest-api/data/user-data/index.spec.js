@@ -4,7 +4,7 @@ const path = require('path')
 
 userData.__file__ = path.join(__dirname, 'users.test.json')
 
-fdescribe('user data', () => {
+describe('user data', () => {
     const users = [
         {
             id: "123",
