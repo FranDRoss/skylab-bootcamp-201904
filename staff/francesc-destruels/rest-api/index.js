@@ -154,17 +154,17 @@ app.get('/user/favs', jsonParser, (req, res) => {
     }
 })
 
-app.post('/user/addCart/', jsonParser, (req, res) => {
-    let { headers: { authorization: token }, body: { id, quantity } } = req
+app.post('/user/addCart', jsonParser, (req, res) => {
+    let { headers: { authorization: token }, body: { id, amount } } = req
     token = token.split(' ')[1]
-
+    
     try {
         let payload = jwt.verify(token, 'Ladonahemovile')
 
         const { sub } = payload
 
-        if (id && quantity) {
-            let product = [id, quantity]
+        if (id && amount) {
+            let product = [id, amount]
 
             return logic.addCart(sub, product)
                 .then(() => res.json({ message: 'Added' }))
