@@ -161,33 +161,39 @@ describe('logic', () => {
             let usingUser
             const criteria = (({ email: _email, password: _password }) => (_email === email && _password === password))
 
-            beforeEach(() =>
-                userData.create({ name, surname, email, password })
-                    .then(() => userData.find(criteria)
-                        .then(response => {
-                            return usingUser = response[0]
-                        })
-                    ))
+            beforeEach(async () => {
+                const data = await userData.create({ name, surname, email, password })
+                if (!data) {
+                    const response = await userData.find(criteria)
+                    return usingUser = response[0]
+                }
 
-            it('should succeed on correct user id ', () =>
-                logic.retrieveUser(usingUser.id)
-                    .then(user => {
-                        expect(user.id).toBe(usingUser.id)
-                        expect(user.name).toBe(usingUser.name)
-                        expect(user.surname).toBe(usingUser.surname)
-                        expect(user.email).toBe(usingUser.email)
-                        expect(user.password).toBeUndefined()
-                    })
-            )
+            })
+
+            it('should succeed on correct user id ', async () => {
+                const user = await logic.retrieveUser(usingUser.id)
+
+                expect(user.id).toBe(usingUser.id)
+                expect(user.name).toBe(usingUser.name)
+                expect(user.surname).toBe(usingUser.surname)
+                expect(user.email).toBe(usingUser.email)
+                expect(user.password).toBeUndefined()
+
+            })
         })
 
         describe('toggle fav duck', () => {
             let id, duckId = `${Math.random()}`
 
-            beforeEach(() => userData.create({ name, surname, email, password })
-                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                .then(response => id = response[0].id)
-            )
+            beforeEach(async () => {
+                const done = await userData.create({ name, surname, email, password })
+
+                if (!done) {
+                    const response = await userData.find(({ email: _email, password: _password }) => (_email === email && _password === password))
+                    id = response[0].id
+                }
+            })
+
 
             it('should succeed adding fav on first time', () => {
                 return logic.toggleFavDuck(id, duckId)
@@ -359,8 +365,6 @@ describe('logic', () => {
                     })
                     .then(user => {
 
-                        console.log(user)
-
                         expect(user).toBeDefined()
 
                         expect(user.checkout).toBeTruthy()
@@ -379,8 +383,6 @@ describe('logic', () => {
                         return userData.retrieve(id)
                     })
                     .then(user => {
-
-                        console.log(user)
 
                         expect(user).toBeDefined()
 

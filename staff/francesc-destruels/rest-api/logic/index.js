@@ -14,12 +14,12 @@ const logic = {
 
         validate.email(email)
 
-        return userData.find(({ email: _email }) => (_email === email))
-            .then(results => {
-                if (!results[0]) return userData.create({ name, surname, email, password })
-                else throw new LogicError(`User with ${email} already exist`)
-            })
+        return (async () => {
+            const results = await userData.find(({ email: _email }) => (_email === email))
 
+            if (!results[0]) return userData.create({ name, surname, email, password })
+            else throw new LogicError(`User with ${email} already exist`)
+        })()
     },
 
     authenticateUser(_email, _password) {
@@ -30,13 +30,14 @@ const logic = {
 
         validate.email(_email)
 
-        return userData.find(({ email, password }) => (email === _email && password === _password))
-            .then(user => {
-                if (user[0]) {
+        return (async () => {
+            const user = await userData.find(({ email, password }) => (email === _email && password === _password))
 
-                    return user[0].id
-                } else throw new LogicError(`user with username \"${_email}\" does not exist`)
-            })
+            if (user[0]) {
+                return user[0].id
+
+            } else throw new LogicError(`user with username \"${_email}\" does not exist`)
+        })()
     },
 
     retrieveUser(id) {
@@ -44,14 +45,18 @@ const logic = {
             { name: 'id', value: id, type: 'string', notEmpty: true },
         ])
 
-        return userData.retrieve(id)
-            .then(response => {
-                if (response.id === id) {
-                    const { name, surname, email, id } = response
+        return (async () => {
 
-                    return { name, surname, email, id }
-                } else throw new LogicError("No User for that id")
-            })
+            const response = await userData.retrieve(id)
+
+            if (response.id === id) {
+                const { name, surname, email, id } = response
+
+                return { name, surname, email, id }
+
+            } else throw new LogicError("No User for that id")
+
+        })()
     },
 
     searchDucks(id, query) {
@@ -60,13 +65,14 @@ const logic = {
             { name: 'query', value: query, type: 'string' }
         ])
 
-        return userData.retrieve(id)
-            .then(response => {
-                if (response.id === id) {
-                    return duckApi.searchDucks(query)
-                        .then(ducks => ducks instanceof Array ? ducks : [])
-                } else throw new LogicError(response.error)
-            })
+        return (async () => {
+            const response = await userData.retrieve(id)
+            if (response.id === id) {
+                const ducks = await duckApi.searchDucks(query)
+                return ducks instanceof Array ? ducks : []
+
+            } else throw new LogicError(response.error)
+        })()
     },
 
     retrieveDuck(_id, id) {
@@ -75,12 +81,12 @@ const logic = {
             { name: 'id', value: id, type: 'string', notEmpty: true }
         ])
 
-        return userData.retrieve(_id)
-            .then(response => {
-                if (response.id === _id) {
-                    return duckApi.retrieveDuck(id)
-                } else throw new LogicError(response.error)
-            })
+        return (async () => {
+            const response = await userData.retrieve(_id)
+            if (response.id === _id) {
+                return await duckApi.retrieveDuck(id)
+            } else throw new LogicError(response.error)
+        })()
     },
 
     toggleFavDuck(user, id) {
@@ -89,22 +95,23 @@ const logic = {
             { name: 'id', value: id, type: 'string', notEmpty: true }
         ])
 
-        return userData.retrieve(user)
-            .then(response => {
-                if (response.id === user) {
-                    const { favs = [] } = response
+        return (async () => {
+            const response = await userData.retrieve(user)
 
-                    const index = favs.indexOf(id)
+            if (response.id === user) {
+                const { favs = [] } = response
 
-                    if (index < 0) favs.push(id)
-                    else favs.splice(index, 1)
+                const index = favs.indexOf(id)
 
-                    return userData.update(user, { favs })
-                        .then(() => { })
-                }
+                if (index < 0) favs.push(id)
+                else favs.splice(index, 1)
 
-                throw new LogicError(response.error)
-            })
+                return await userData.update(user, { favs })
+
+            }
+
+            throw new LogicError(response.error)
+        })()
     },
 
     retrieveFavDucks(id) {
@@ -112,20 +119,21 @@ const logic = {
             { name: 'id', value: id, type: 'string', notEmpty: true },
         ])
 
-        return userData.retrieve(id)
-            .then(response => {
-                if (response.id === id) {
-                    const { favs = [] } = response
+        return (async () => {
+            const response = await userData.retrieve(id)
 
-                    if (favs.length) {
-                        const calls = favs.map(fav => duckApi.retrieveDuck(fav))
+            if (response.id === id) {
+                const { favs = [] } = response
 
-                        return Promise.all(calls)
-                    } else return favs
-                }
+                if (favs.length) {
+                    const calls = favs.map(fav => duckApi.retrieveDuck(fav))
 
-                throw new LogicError(response.error)
-            })
+                    return await Promise.all(calls)
+                } else return favs
+            }
+
+            throw new LogicError(response.error)
+        })()
     },
 
     addCart(id, product) {
@@ -134,37 +142,36 @@ const logic = {
             { name: 'product', value: product, type: 'object', notEmpty: true }
         ])
 
-        return userData.retrieve(id)
-            .then(response => {
-                if (response.id === id) {
+        return (async () => {
+            const response = await userData.retrieve(id)
 
-                    let { cart = [] } = response
+            if (response.id === id) {
 
-                    if (cart.length === 0) {
-                        cart.push(product)
+                let { cart = [] } = response
 
-                        return userData.update(id, { cart })
-                            .then(() => { })
+                if (cart.length === 0) {
+                    cart.push(product)
 
-                    } else {
-                        let done = false
-                        let changes = cart.map(thing => {
-                            if (thing[0] === product[0]) {
-                                thing[1] = thing[1] + product[1]
+                    return await userData.update(id, { cart })
 
-                                done = true
-                                return thing
-                            } else return thing
-                        })
+                } else {
+                    let done = false
+                    let changes = cart.map(thing => {
+                        if (thing[0] === product[0]) {
+                            thing[1] = thing[1] + product[1]
 
-                        if (!done) changes.push(product)
+                            done = true
+                            return thing
+                        } else return thing
+                    })
 
-                        return userData.update(id, { cart: changes })
-                            .then(() => { })
-                    }
+                    if (!done) changes.push(product)
 
-                } else throw new LogicError(response.error)
-            })
+                    return await userData.update(id, { cart: changes })
+                }
+
+            } else throw new LogicError(response.error)
+        })()
     },
 
     retrieveCart(id) {
@@ -172,31 +179,27 @@ const logic = {
             { name: 'id', value: id, type: 'string', notEmpty: true },
         ])
 
-        return userData.retrieve(id)
-            .then(response => {
-                if (response.id === id) {
-                    const { cart = [] } = response
+        return (async () => {
+            const response = await userData.retrieve(id)
 
-                    if (cart.length) {
-                        const calls = cart.map(([thing]) => duckApi.retrieveDuck(thing))
-                        return Promise.all(calls)
-                            .then(list => {
+            if (response.id === id) {
+                const { cart = [] } = response
 
-                                for (let i = 0; i < list.length; i++) {
-                                    list[i].howMany = cart[i][1]
-                                }
+                if (cart.length) {
+                    const calls = cart.map(([thing]) => duckApi.retrieveDuck(thing))
+                    const list = await Promise.all(calls)
 
-                                return list
-                            })
+                    for (let i = 0; i < list.length; i++) {
+                        list[i].howMany = cart[i][1]
+                    }
 
-                    } else return cart
-                }
+                    return list
 
-                throw new LogicError(response.error)
-            })
+                } else return cart
+            }
 
-
-
+            throw new LogicError(response.error)
+        })()
     },
 
     checkout(id) {
@@ -204,25 +207,22 @@ const logic = {
             { name: 'id', value: id, type: 'string', notEmpty: true },
         ])
 
-        return userData.retrieve(id)
-            .then(response => {
-                if (response.id === id) {
-                    const { cart = [], checkout = [] } = response
+        return (async () => {
+            const response = await userData.retrieve(id)
+            if (response.id === id) {
+                const { cart = [], checkout = [] } = response
 
-                    if (cart.length) {
+                if (cart.length) {
 
-                        let newId = JSON.stringify(new Date()) // el ID es la fecha de compra!
+                    let newId = JSON.stringify(new Date()) // el ID es la fecha de compra!
 
-                        checkout.push({ id: newId, productList: cart })
+                    checkout.push({ id: newId, productList: cart })
 
-                        return userData.update(id, { cart: [], checkout })
-                            .then(() => { })
+                    return await userData.update(id, { cart: [], checkout })
+                }
 
-                    }
-
-                } else throw new LogicError("Cart is empty")
-            })
-
+            } else throw new LogicError("Cart is empty")
+        })()
     },
 
     // retrieveCheckoutList(id) {

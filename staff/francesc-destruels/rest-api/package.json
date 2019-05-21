@@ -11,6 +11,7 @@
     "express-session": "^1.16.1",
     "isomorphic-fetch": "^2.2.1",
     "jsonwebtoken": "^8.5.1",
+    "mongodb": "^3.2.5",
     "pug": "^2.0.3"
   },
   "devDependencies": {
