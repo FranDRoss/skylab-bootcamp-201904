@@ -1,107 +1,71 @@
-const fs = require('fs').promises
-const path = require('path')
-const uuid = require('uuid/v4')
 const validate = require('../../common/validate')
+const { ValueError } = require('../../common/errors')
+const { MongoClient, ObjectId } = require('mongodb')
 
 const userData = {
-    __file__: path.join(__dirname, 'users.json'),
-
-    async __load__() {
-        const data = await fs.readFile(this.__file__, 'utf8')
-        return await JSON.parse(data)
-    },
-
-    __save__(users) {
-        return fs.writeFile(this.__file__, JSON.stringify(users))
-    },
-
+    __col__: null,
 
     create(user) {
         validate.arguments([
             { name: 'user', value: user, type: 'object', optional: false }
         ])
 
-        user.id = uuid()
-
         return (async () => {
-            let users = await this.__load__()
-
-            users.push(user)
-
-            return this.__save__(users)
+            await this.__col__.insertOne(user)
         })()
     },
 
     list() {
-        return this.__load__()
+        return this.__col__.find().toArray()
     },
 
     retrieve(id) {
         validate.arguments([
-            { name: 'id', value: id, type: 'string', optional: false }
+            { name: 'id', value: id, type: 'object', notEmpty: true, optional: false }
         ])
 
         return (async () => {
-            const users = await this.__load__()
-
-            const user = users.find(user => user.id === id)
-
-            return user
+            return await this.__col__.findOne(id)
         })()
     },
 
-    update(id, data) {
+    find(criteria, especific) {
         validate.arguments([
-            { name: 'id', value: id, type: 'string', optional: false },
-            { name: 'data', value: data, type: 'object', optional: false }
+            { name: 'especific', value: especific, type: 'boolean', notEmpty: true, optional: false }
         ])
+
+        if (!especific) {
+            return (async () => {
+                const cursor = await this.__col__.find()
+
+                const users = []
+
+                await cursor.forEach(user => {
+                    if (criteria(user)) return users.push(user)
+                })
+
+                return users
+            })()
+        } else {
+            return (async () => await this.__col__.findOne(criteria))()
+        }
+    },
+
+    update(id, data, replace) {
+        validate.arguments([
+            { name: 'id', value: id, type: 'object', notEmpty: true },
+            { name: 'data', value: data, type: 'object' },
+            { name: 'replace', value: replace, type: 'boolean', optional: true }
+        ])
+
+        if (data._id && id !== data.id) throw new ValueError('data id does not match criteria id')
 
         return (async () => {
 
-            const users = await this.__load__()
-
-            const updatedList = users.map(user => {
-
-                if (user.id === id) {
-                    const dataKey = Object.keys(data) // name
-
-                    for (i = 0; i < dataKey.length; i++) {
-                        user[dataKey[i]] = data[dataKey[i]]
-                    }
-                }
-
-                return user
-            })
-
-            this.__save__(updatedList)
-        })()
-    },
-
-    delete(_id) {
-        validate.arguments([
-            { name: 'id', value: _id, type: 'string', optional: false }
-        ])
-
-        return (async () => {
-            const users = await this.__load__()
-
-            const index = users.findIndex(user => user.id === _id)
-
-            if (index < 0) throw new Error(`User doesn't exist`)
-
-            this.__save__(users)
-        })()
-    },
-
-    find(criteria) {
-        validate.arguments([
-            { name: 'criteria', value: criteria, type: 'function', notEmpty: true, optional: false }
-        ])
-
-        return ( async () => {
-            const users = await this.__load__()
-
-            return users.filter(criteria)
+            if (replace) {
+                await this.__col__.findOneAndReplace({ _id: id }, data)
+            } else
+                await this.__col__.findOneAndUpdate({ _id: id }, { $set: data })
         })()
     }
 }

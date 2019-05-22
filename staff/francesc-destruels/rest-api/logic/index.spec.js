@@ -3,39 +3,62 @@ const { LogicError, RequirementError, ValueError, FormatError } = require('../co
 const userData = require('../data/user-data')
 const duckApi = require('../data/duck-api')
 const fs = require('fs').promises
-const path = require('path')
 
-userData.__file__ = path.join(__dirname, '../data/user-data/users.test.json')
+require('../common/utils/array-random.polyfill')
+const { MongoClient, ObjectId } = require('mongodb')
+
+const url = 'mongodb://localhost/rest-api-test'
+
 
 describe('logic', () => {
-    const name = 'Manuel'
-    const surname = 'Barzi'
-    let email
-    const password = '123'
+    let client, users
 
-    beforeEach(() => email = `manuelbarzi-${Math.random()}@gmail.com`)
+    beforeAll(async () => {
+        client = await MongoClient.connect(url, { useNewUrlParser: true })
+
+        const db = client.db()
+
+        users = db.collection('users')
+
+        userData.__col__ = users
+    })
+
+    const names = ['Pepito', 'Fulanito', 'Menganito']
+
+    let users_
+
+    beforeEach(async () => {
+
+        await users.deleteMany()
+
+        return users_ = new Array(Math.random(100)).fill().map(() => ({
+            name: `${names.random()}-${Math.random()}`,
+            surname: `Grillo-${Math.random()}`,
+            email: `grillo-${Math.random()}@mail.com`,
+            password: `123-${Math.random()}`
+        }))
+
+    })
 
     describe('users', () => {
+        const name = 'Manuel', surname = 'Barzi', email = 'manuelbarzi@gmail.com', password = '123'
 
         describe('register user', () => {
-            it('should succeed on correct user data', () =>
-                logic.registerUser(name, surname, email, password)
-                    .then(response => expect(response).toBeUndefined())
-            )
 
-            describe('on already existing user', () => {
-                beforeEach(() => logic.registerUser(name, surname, email, password))
+            it('should succeed on correct user data', async () => {
+                const response = await logic.registerUser(name, surname, email, password)
+                expect(response).toBeUndefined()
+            })
 
-                it('should fail on retrying to register', () =>
-                    logic.registerUser(name, surname, email, password)
-                        .then(() => { throw Error('should not reach this point') })
-                        .catch(error => {
-                            expect(error).toBeDefined()
-                            expect(error instanceof LogicError).toBeTruthy()
+            it('should fail on retrying to register', async () => {
+                await userData.create({ name, surname, email, password })
+                await logic.registerUser(name, surname, email, password)
+                    .catch(error => {
+                        expect(error).toBeDefined()
+                        expect(error instanceof LogicError).toBeTruthy()
 
-                            expect(error.message).toBe(`User with ${email} already exist`)
-                        })
-                )
+                        expect(error.message).toBe(`User with ${email} already exist`)
+                    })
             })
 
             it('should fail on undefined name', () => {
@@ -121,62 +144,53 @@ describe('logic', () => {
         describe('authenticate user', () => {
             let id, elEmail
 
-            beforeEach(() => {
+            beforeEach(async () => {
                 elEmail = email
-                return userData.create({ name, surname, email, password })
-                    .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                    .then(response => { id = response[0].id })
+                await userData.create({ name, surname, email, password })
+                const response = await users.findOne(({ email, password }))
+                id = response._id.toString()
             })
 
-            it('should succeed on correct user credential', () => {
+            it('should succeed on correct user credential', async () => {
 
-                return logic.authenticateUser(elEmail, password)
-                    .then(_id_ => {
-                        expect(typeof _id_).toBe('string')
-                        expect(_id_.length).toBeGreaterThan(0)
+                const _id_ = await logic.authenticateUser(elEmail, password)
+                expect(typeof _id_).toBe('string')
+                expect(_id_.length).toBeGreaterThan(0)
 
-                        expect(_id_).toBe(id)
-                    })
+                expect(_id_).toBe(id)
             })
 
-            describe('authenticate user', () => {
+            it('should fail on non-existing user', async () => {
                 let fakeEmail = 'unexisting-user@mail.com'
 
-                it('should fail on non-existing user', () => {
-                    return logic.authenticateUser(fakeEmail, password)
-                        .then(() => { throw Error('should not reach this point') })
-                        .catch(error => {
+                await logic.authenticateUser(fakeEmail, password)
+                    .catch(error => {
+                        expect(error).toBeDefined()
+                        expect(error instanceof LogicError).toBeTruthy()
 
-                            expect(error).toBeDefined()
-                            expect(error instanceof LogicError).toBeTruthy()
+                        expect(error.message).toBe(`user with username \"${fakeEmail}\" does not exist`)
+                    })
 
-                            expect(error.message).toBe(`user with username \"${fakeEmail}\" does not exist`)
-                        })
-
-                })
             })
+
         })
 
         describe('retrieve user', () => {
-            let usingUser
-            const criteria = (({ email: _email, password: _password }) => (_email === email && _password === password))
+            let toCheck
 
             beforeEach(async () => {
-                const data = await userData.create({ name, surname, email, password })
-                if (!data) {
-                    const response = await userData.find(criteria)
-                    return usingUser = response[0]
-                }
-
+                await userData.create({ name, surname, email, password })
+                const response = await users.findOne(({ email, password }))
+                toCheck = response
             })
 
             it('should succeed on correct user id ', async () => {
-                const user = await logic.retrieveUser(usingUser.id)
+                const user = await logic.retrieveUser(toCheck._id.toString())
 
-                expect(user.id).toBe(usingUser.id)
-                expect(user.name).toBe(usingUser.name)
-                expect(user.surname).toBe(usingUser.surname)
-                expect(user.email).toBe(usingUser.email)
+                expect(user.id).toBe(toCheck._id.toString())
+                expect(user.name).toBe(toCheck.name)
+                expect(user.surname).toBe(toCheck.surname)
+                expect(user.email).toBe(toCheck.email)
                 expect(user.password).toBeUndefined()
 
             })
@@ -186,40 +200,37 @@ describe('logic', () => {
             let id, duckId = `${Math.random()}`
 
             beforeEach(async () => {
-                const done = await userData.create({ name, surname, email, password })
-
-                if (!done) {
-                    const response = await userData.find(({ email: _email, password: _password }) => (_email === email && _password === password))
-                    id = response[0].id
-                }
+                await userData.create({ name, surname, email, password })
+                const response = await users.findOne(({ email, password }))
+                id = response._id.toString()
             })
 
 
-            it('should succeed adding fav on first time', () => {
-                return logic.toggleFavDuck(id, duckId)
-                    .then(response => expect(response).toBeUndefined())
-                    .then(() => userData.retrieve(id))
-                    .then(response => {
-                        const { favs } = response
+            it('should succeed adding fav on first time', async () => {
+                const response = await logic.toggleFavDuck(id, duckId)
 
-                        expect(favs).toBeDefined()
-                        expect(favs instanceof Array).toBeTruthy()
-                        expect(favs.length).toBe(1)
-                        expect(favs[0]).toBe(duckId)
-                    })
+                expect(response).toBeUndefined()
+
+                const response2 = await userData.retrieve(ObjectId(id))
+
+                const { favs } = response2
+
+                expect(favs).toBeDefined()
+                expect(favs instanceof Array).toBeTruthy()
+                expect(favs.length).toBe(1)
+                expect(favs[0]).toBe(duckId)
             })
 
-            it('should succeed removing fav on second time', () => {
-                return logic.toggleFavDuck(id, duckId)
-                    .then(() => logic.toggleFavDuck(id, duckId))
-                    .then(() => userData.retrieve(id))
-                    .then(response => {
-                        const { favs } = response
+            it('should succeed removing fav on second time', async () => {
+                await logic.toggleFavDuck(id, duckId)
+                await logic.toggleFavDuck(id, duckId)
+                const response = await userData.retrieve(ObjectId(id))
 
-                        expect(favs).toBeDefined()
-                        expect(favs instanceof Array).toBeTruthy()
-                        expect(favs.length).toBe(0)
-                    })
+                const { favs } = response
+
+                expect(favs).toBeDefined()
+                expect(favs instanceof Array).toBeTruthy()
+                expect(favs.length).toBe(0)
             })
 
             it('should fail on null duck id', () => {
@@ -234,127 +245,131 @@ describe('logic', () => {
         describe('retrieve fav ducks', () => {
             let id, _favs
 
-            beforeEach(() => {
+            beforeEach(async () => {
                 _favs = []
 
-                return duckApi.searchDucks('')
-                    .then(ducks => {
-                        for (let i = 0; i < 10; i++) {
-                            const randomIndex = Math.floor(Math.random() * ducks.length)
+                const ducks = await duckApi.searchDucks('')
+                for (let i = 0; i < 10; i++) {
+                    const randomIndex = Math.floor(Math.random() * ducks.length)
 
-                            _favs[i] = ducks.splice(randomIndex, 1)[0].id
-                        }
+                    _favs[i] = ducks.splice(randomIndex, 1)[0].id
+                }
 
-                        return userData.create({ name, surname, email, password, favs: _favs })
-                    })
-                    .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                    .then(response => id = response[0].id)
+                await userData.create({ name, surname, email, password, favs: _favs })
+                const response = await users.findOne(({ email, password }))
+                id = response._id.toString()
             })
 
-            it('should succeed adding fav on first time', () =>
-                logic.retrieveFavDucks(id)
-                    .then(ducks => {
-                        ducks.forEach(({ id: _id, title, imageUrl, description, price }) => {
-                            const isFav = _favs.some(fav => fav === _id)
+            it('should succeed retriving ducks from fav', async () => {
+                const ducks = await logic.retrieveFavDucks(id)
 
-                            expect(isFav).toBeTruthy()
-                            expect(typeof title).toBe('string')
-                            expect(title.length).toBeGreaterThan(0)
-                            expect(typeof imageUrl).toBe('string')
-                            expect(imageUrl.length).toBeGreaterThan(0)
-                            expect(typeof description).toBe('string')
-                            expect(description.length).toBeGreaterThan(0)
-                            expect(typeof price).toBe('string')
-                            expect(price.length).toBeGreaterThan(0)
-                        })
-                    })
-            )
+                ducks.forEach(({ id: _id, title, imageUrl, description, price }) => {
+                    const isFav = _favs.some(fav => fav === _id)
+
+                    expect(isFav).toBeTruthy()
+                    expect(typeof title).toBe('string')
+                    expect(title.length).toBeGreaterThan(0)
+                    expect(typeof imageUrl).toBe('string')
+                    expect(imageUrl.length).toBeGreaterThan(0)
+                    expect(typeof description).toBe('string')
+                    expect(description.length).toBeGreaterThan(0)
+                    expect(typeof price).toBe('string')
+                    expect(price.length).toBeGreaterThan(0)
+                })
+            })
+
         })
 
         describe('add car', () => {
             let id, product = [45654, 5], product2 = [454545, 5]
 
-            beforeEach(() => userData.create({ name, surname, email, password })
-                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                .then(response => id = response[0].id)
-            )
+            beforeEach(async () => {
 
-            it('should succeed adding a new product to an empty cart', () => {
-                return logic.addCart(id, product)
-                    .then(response => expect(response).toBeUndefined())
-                    .then(() => userData.retrieve(id))
-                    .then(response => {
-                        const { cart } = response
-
-                        expect(cart).toBeDefined()
-                        expect(cart instanceof Array).toBeTruthy()
-                        expect(cart.length).toBe(1)
-                        expect(cart[0][0]).toBe(product[0])
-                    })
+                await userData.create({ name, surname, email, password })
+                const response = await users.findOne(({ email, password }))
+                id = response._id.toString()
             })
 
-            it('should succeed adding a new product to the cart', () => {
-                return logic.addCart(id, product)
-                    .then(() => logic.addCart(id, product2))
-                    .then(response => expect(response).toBeUndefined())
-                    .then(() => userData.retrieve(id))
-                    .then(response => {
-                        const { cart } = response
 
-                        expect(cart).toBeDefined()
-                        expect(cart instanceof Array).toBeTruthy()
-                        expect(cart.length).toBe(2)
-                        expect(cart[0][0]).toBe(product[0])
-                        expect(cart[0][1]).toBe(product[1])
-                    })
+            it('should succeed adding a new product to an empty cart', async () => {
+                const response = await logic.addCart(id, product)
+                expect(response).toBeUndefined()
+
+                const response2 = await userData.retrieve(ObjectId(id))
+                const { cart } = response2
+
+                expect(cart).toBeDefined()
+                expect(cart instanceof Array).toBeTruthy()
+                expect(cart.length).toBe(1)
+                expect(cart[0][0]).toBe(product[0])
+
             })
 
-            it('should succeed in incresing the amount of an already added product', () => {
-                return logic.addCart(id, product)
-                    .then(() => logic.addCart(id, product))
-                    .then(response => expect(response).toBeUndefined())
-                    .then(() => userData.retrieve(id))
-                    .then(response => {
-                        const { cart } = response
+            it('should succeed adding a new product to the cart', async () => {
+                await logic.addCart(id, product)
+                const response = await logic.addCart(id, product2)
+                expect(response).toBeUndefined()
+                const response2 = await userData.retrieve(ObjectId(id))
 
-                        expect(cart).toBeDefined()
-                        expect(cart instanceof Array).toBeTruthy()
-                        expect(cart.length).toBe(1)
-                        expect(cart[0][0]).toBe(product[0])
-                        expect(cart[0][1]).toBe(product[1] * 2)
-                    })
+                const { cart } = response2
+
+                expect(cart).toBeDefined()
+                expect(cart instanceof Array).toBeTruthy()
+                expect(cart.length).toBe(2)
+                expect(cart[0][0]).toBe(product[0])
+                expect(cart[0][1]).toBe(product[1])
+            })
+
+            it('should succeed in incresing the amount of an already added product', async () => {
+                await logic.addCart(id, product)
+                const response = await logic.addCart(id, product)
+                expect(response).toBeUndefined()
+                const response2 = await userData.retrieve(ObjectId(id))
+
+                const { cart } = response2
+
+                expect(cart).toBeDefined()
+                expect(cart instanceof Array).toBeTruthy()
+                expect(cart.length).toBe(1)
+                expect(cart[0][0]).toBe(product[0])
+                expect(cart[0][1]).toBe(product[1] * 2)
+
             })
         })
 
         describe('retrive cart', () => {
             let id, product = ["5c3853aebd1bde8520e66e11", 5], product2 = ["5c3853aebd1bde8520e66e15", 5]
 
-            beforeEach(() => userData.create({ name, surname, email, password })
-                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                .then(response => id = response[0].id)
-            )
+            beforeEach(async () => {
 
-            it('should succeed on retriving the cart', () => {
-                return userData.update(id, { cart: [product, product2] })
-                    .then(() => logic.retrieveCart(id))
-                    .then(cart => {
+                await userData.create({ name, surname, email, password })
+                const response = await users.findOne(({ email, password }))
+                id = response._id.toString()
+            })
 
-                        expect(cart).toBeDefined()
-                        expect(cart instanceof Array).toBeTruthy()
-                        expect(cart.length).toBe(2)
-                        expect(cart[0].howMany).toBe(product[1])
-                        expect(cart[1].howMany).toBe(product2[1])
-                    })
+            it('should succeed on retriving the cart', async () => {
+                await userData.update(ObjectId(id), { cart: [product, product2] })
+                const cart = await logic.retrieveCart(id)
+
+
+                expect(cart).toBeDefined()
+                expect(cart instanceof Array).toBeTruthy()
+                expect(cart.length).toBe(2)
+                expect(cart[0].howMany).toBe(product[1])
+                expect(cart[1].howMany).toBe(product2[1])
+
             })
         })
 
         describe('checkout', () => {
             let id, product = ["5c3853aebd1bde8520e66e11", 5], product2 = ["5c3853aebd1bde8520e66e15", 5]
 
-            beforeEach(() => userData.create({ name, surname, email, password })
-                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                .then(response => id = response[0].id)
-            )
+            beforeEach(async () => {
+
+                await userData.create({ name, surname, email, password })
+                const response = await users.findOne(({ email, password }))
+                id = response._id.toString()
+            })
 
             it('should succeed on adding the cart to the checkoutlist with a timestamp as an Id', () => {
                 return userData.update(id, { cart: [product, product2] })
@@ -399,28 +414,29 @@ describe('logic', () => {
     })
 
     describe('ducks', () => {
+        const name = 'Manuel', surname = 'Barzi', email = 'manuelbarzi@gmail.com', password = '123'
         let id
 
+        beforeEach(async () => {
 
-        beforeEach(() =>
-            userData.create({ name, surname, email, password })
-                .then(() => userData.find(({ email: _email, password: _password }) => (_email === email && _password === password)))
-                .then(response => id = response[0].id)
-        )
+            await userData.create({ name, surname, email, password })
+            const response = await users.findOne(({ email, password }))
+            id = response._id.toString()
+        })
 
         describe('search ducks', () => {
-            it('should succeed on correct query', () =>
-                logic.searchDucks(id, 'yellow')
-                    .then(ducks => {
-                        expect(ducks).toBeDefined()
-                        expect(ducks instanceof Array).toBeTruthy()
-                        expect(ducks.length).toBe(13)
-                    })
+            it('should succeed on correct query', async () => {
+                const ducks = await logic.searchDucks(id, 'yellow')
+
+                expect(ducks).toBeDefined()
+                expect(ducks instanceof Array).toBeTruthy()
+                expect(ducks.length).toBe(13)
+
 
                 // TODO other cases
-            )
+            })
         })
     })
 
-    afterAll(() => fs.writeFile(userData.__file__, '[]'))
+    afterAll(() => client.close(true))
 })
