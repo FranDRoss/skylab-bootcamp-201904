@@ -7,7 +7,7 @@ const fs = require('fs').promises
 require('../common/utils/array-random.polyfill')
 const { MongoClient, ObjectId } = require('mongodb')
 
-const url = 'mongodb://localhost/rest-api-test'
+const url = 'mongodb://localhost/rest-api-logic-test'
 
 
 describe('logic', () => {
@@ -187,7 +187,7 @@ describe('logic', () => {
             it('should succeed on correct user id ', async () => {
                 const user = await logic.retrieveUser(toCheck._id.toString())
 
-                expect(user.id).toBe(toCheck._id.toString())
+                expect(user._id).toBeUndefined()
                 expect(user.name).toBe(toCheck.name)
                 expect(user.surname).toBe(toCheck.surname)
                 expect(user.email).toBe(toCheck.email)

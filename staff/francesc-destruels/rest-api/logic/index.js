@@ -2,7 +2,7 @@ const validate = require('../common/validate')
 const userData = require('../data/user-data')
 const duckApi = require('../data/duck-api')
 const { LogicError } = require('../common/errors')
-const { MongoClient, ObjectId } = require('mongodb')
+const { ObjectId } = require('mongodb')
 
 const logic = {
     registerUser(name, surname, email, password) {
@@ -54,7 +54,7 @@ const logic = {
             if (response._id.toString() === _id) {
                 const { name, surname, email } = response
 
-                const user = { name, surname, email, id: _id }
+                const user = { name, surname, email }
 
                 return user
             } else throw new LogicError("No User for that id")
