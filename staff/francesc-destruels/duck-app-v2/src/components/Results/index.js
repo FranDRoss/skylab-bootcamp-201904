@@ -3,10 +3,10 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faHeart as faHeartSolid } from '@fortawesome/free-solid-svg-icons'
 import { faHeart as faHeartRegular } from '@fortawesome/free-regular-svg-icons'
 
-function Results({ items, onItem, onFav, favs }) {
+function Results({ items, onItem, onFav, favs, cart, onCart }) {
     return <ul>
         {
-            items.map(({ id, title, image, price }) =>{
+            items.map(({ id, title, image, price }) => {
                 const isFav = favs.some(fav => fav.id === id)
 
                 return <li key={id} onClick={() => onItem(id)}>
@@ -18,9 +18,14 @@ function Results({ items, onItem, onFav, favs }) {
                     }} />
                     <img src={image} />
                     <span>{price}</span>
+                    <button onClick={e => {
+                        e.stopPropagation()
+
+                        return onCart(id, 1)
+                    }}>Buy it!</button>
                 </li>
-            })
-        }
+    })
+}
     </ul>
 }
 

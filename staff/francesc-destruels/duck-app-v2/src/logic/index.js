@@ -48,7 +48,6 @@ const logic = {
                 else throw new LogicError("Bad identification")
             })
             .then(response => {
-                
                 this.__userToken__ = response.token
             })
     },
@@ -118,7 +117,28 @@ const logic = {
                 else throw new LogicError("Bad Way")
             })
             .then(({ducks}) => ducks instanceof Array ? ducks : [])
-        }
+    },
+
+    addCart(id, amount) {
+        return restApi.addCart(this.__userToken__, id, amount)
+            .then(response => {
+                if (response.status === 200) return {}
+                else throw new LogicError("Bad Way")
+            })
+    },
+
+    retrieveCart() {
+        return restApi.retrieveCart(this.__userToken__)
+            .then(response => {
+               
+                if (response.status === 200) return response.json()
+                else throw new LogicError("Bad Way")
+            })
+            .then(({products: ducks}) => {
+                console.log(ducks)
+                return ducks instanceof Array ? ducks : []})
+    },
+
 }
 
 export default logic

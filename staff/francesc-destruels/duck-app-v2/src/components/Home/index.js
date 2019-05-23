@@ -3,13 +3,15 @@ import literals from './literals'
 import logic from '../../logic'
 import Search from '../Search'
 import Results from '../Results'
+import Favs from '../Favs'
+import Cart from '../Cart'
 import Detail from '../Detail'
 import './index.sass'
 import { withRouter } from 'react-router-dom'
 import queryString from 'query-string'
 
 class Home extends Component {
-    state = { query: null, error: null, ducks: null, duck: null, favs: null }
+    state = { query: null, error: null, ducks: null, duck: null, favs: null, onFavs: false, cart: null, onCart: false }
 
     componentWillReceiveProps(props) {
         if (props.location.search) {
@@ -26,7 +28,7 @@ class Home extends Component {
     search = query =>
         Promise.all([logic.searchDucks(query), logic.retrieveFavDucks()])
             .then(([ducks, favs]) =>
-                this.setState({ query, duck: null, ducks: ducks.map(({ id, title, imageUrl: image, price }) => ({ id, title, image, price })), favs })
+                this.setState({ query, duck: null, ducks: ducks.map(({ id, title, imageUrl: image, price }) => ({ id, title, image, price })), favs, onFavs: false, onCart: false })
             )
             .catch(error =>
                 this.setState({ error: error.message })
@@ -37,7 +39,7 @@ class Home extends Component {
     retrieve = id =>
         logic.retrieveDuck(id)
             .then(({ title, imageUrl: image, description, price }) =>
-                this.setState({ duck: { title, image, description, price } })
+                this.setState({ duck: { title, image, description, price }, onFavs: false, onCart: false })
             )
             .catch(error =>
                 this.setState({ error: error.message })
@@ -50,12 +52,34 @@ class Home extends Component {
             .then(() => logic.retrieveFavDucks())
             .then(favs => this.setState({ favs }))
 
+    handleFavouritesList = () =>
+        logic.retrieveFavDucks()
+            .then(favs => {
+                this.setState({ favs, onFavs: true, onCart: false })
+            })
+
+    handleRetriveCart = () =>
+        logic.retrieveCart()
+            .then(cart => {
+                this.setState({ cart, onCart: true, onFavs: false })
+            })
+
+    handleAddCart = (id, amount) => {
+        return logic.addCart(id, amount)
+            .then(() => logic.retrieveCart())
+            .then(cart => {
+                this.setState({ cart })})
+    }
+
     render() {
         const {
             handleSearch,
             handleRetrieve,
+            handleAddCart,
+            handleRetriveCart,
             handleFav,
-            state: { query, ducks, duck, favs },
+            handleFavouritesList,
+            state: { query, ducks, duck, favs, onFavs, cart, onCart },
             props: { lang, name, onLogout }
         } = this
 
@@ -64,9 +88,15 @@ class Home extends Component {
         return <main className="home">
             <h1>{hello}, {name}!</h1>
             <button onClick={onLogout}>{logout}</button>
+            <div>
+                <button onClick={handleFavouritesList}>Favourites</button>
+                <button onClick={handleRetriveCart}>Cart</button>
+            </div>
             <Search lang={lang} query={query} onSearch={handleSearch} />
-            {!duck && ducks && (ducks.length && <Results items={ducks} onItem={handleRetrieve} onFav={handleFav} favs={favs} /> || <p>No results.</p>)}
-            {duck && <Detail item={duck} />}
+            {onCart && <Cart items={cart} onItem={handleRetrieve}  onCart={handleAddCart} />}
+            {onFavs && <Favs items={favs}  onCart={handleAddCart} cart={cart}  onItem={handleRetrieve} onFav={handleFav} favs={favs} />}
+            {!duck && ducks && !onFavs && !onCart && (ducks.length && <Results items={ducks} onItem={handleRetrieve} onCart={handleAddCart} cart={cart} onFav={handleFav} favs={favs} /> || <p>No results.</p>)}
+            {duck && !onFavs && !onCart && <Detail item={duck} onFav={handleFav} onCart={handleAddCart} cart={cart} />}
         </main>
     }
 }

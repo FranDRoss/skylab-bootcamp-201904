@@ -68,8 +68,8 @@ const restApi = {
             { name: 'token', value: token, type: 'string', notEmpty: true },
             { name: 'query', value: query, type: 'string' }
         ])
-        
-        return call(`${this.__url__}/duckSearch?q=${query}`,{
+
+        return call(`${this.__url__}/duckSearch?q=${query}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
@@ -82,7 +82,7 @@ const restApi = {
             { name: 'id', value: id, type: 'string' }
         ])
 
-        return call(`${this.__url__}/duckDetail/${id}`,{
+        return call(`${this.__url__}/duckDetail/${id}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
@@ -105,17 +105,47 @@ const restApi = {
         })
     },
 
-    retrieveFavDucks( token ) {
+    retrieveFavDucks(token) {
         validate.arguments([
             { name: 'token', value: token, type: 'string', notEmpty: true },
         ])
 
-        return call(`${this.__url__}/user/favs`,{
+        return call(`${this.__url__}/user/favs`, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
         })
     },
+
+    retrieveCart(token) {
+        validate.arguments([
+            { name: 'token', value: token, type: 'string', notEmpty: true },
+        ])
+
+        return call(`${this.__url__}/user/cart`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        })
+    },
+
+    addCart(token, id, amount) {
+        validate.arguments([
+            { name: 'token', value: token, type: 'string', notEmpty: true },
+            { name: 'id', value: id, type: 'string', notEmpty: true },
+            { name: 'amount', value: amount, type: 'number', notEmpty: true },
+        ])
+
+        return call(`${this.__url__}/user/addCart`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ id, amount }),
+            timeout: this.__timeout__
+        })
+    }
 }
 
 export default restApi
