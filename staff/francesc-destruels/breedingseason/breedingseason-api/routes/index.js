@@ -16,6 +16,7 @@ const router = express.Router()
 
 // User creation route 
 router.post('/user', jsonParser, async (req, res) => { //OK
+    debugger
     const { body: { nickname, age, email, password } } = req
 
     const hashedPassword = await new Promise((resolve, reject) => {
